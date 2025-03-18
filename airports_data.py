@@ -1,7 +1,4 @@
-# this will handle our data for the airports
-# we will use the data from the airports.csv file
-# we will use the pandas library to read the data
-
+"""Data Handling File"""
 import pandas as pd
 
 """----------AIRPORT DATA----------"""
@@ -11,6 +8,9 @@ airport_columns = ["Airport ID", "Name", "City", "Country", "IATA", "ICAO", "Lat
 airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
 
 airports_df = pd.read_csv(airports_data, delimiter=",", names=airport_columns)
+
+airports_df = airports_df.drop(
+    ["Tz database time zone", "Type", "Source"], axis=1)
 
 airports_df = airports_df.astype(
     {col: "string" for col in airports_df.select_dtypes(include=["object"]).columns})
