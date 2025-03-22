@@ -1,0 +1,18 @@
+# CSC111 Winter 2025 Project 2 Requirements
+
+# Testing and code checking
+hypothesis
+pytest
+python-ta~=2.9.1
+
+# Graphics and data visualization
+plotly>=5.22.0
+pygame==2.6.1
+
+# Graph Computations
+networkx
+numpy
+scipy
+
+# Data Handling
+pandas

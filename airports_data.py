@@ -38,7 +38,6 @@ routes_df = routes_df.astype(
 routes_df = routes_df.astype(
     {col: "string" for col in routes_df.select_dtypes(include=["object"]).columns})
 
-
 if __name__ == "__main__":
     print(airports_df.head())
     print(routes_df.head())

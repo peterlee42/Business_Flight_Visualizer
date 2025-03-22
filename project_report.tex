@@ -1,0 +1,147 @@
+\documentclass[fontsize=11pt]{article}
+\usepackage{amsmath}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=0.75in]{geometry}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    pdftitle={Overleaf Example},
+    pdfpagemode=FullScreen,
+    }
+\usepackage{float}
+\usepackage{hanging}
+
+\title{CSC111 Project Proposal: International Airport Visualizer}
+\author{Peter Lee, Billy Chen, and Kai Bague}
+\date{\today}
+
+
+\begin{document}
+\maketitle
+
+\section*{Problem Description and Research Question}
+\begingroup
+    \setlength{\parskip}{1em}  % Adds space between paragraphs
+    
+    \textbf{How can we visualize flights from international airports around the world based on various factors?}
+    
+    These factors would include cost effectiveness, currency exchange rates, airport shopping, distance, greenhouse gas emissions, airport rating, and connectivity of international airports.
+    
+    International travel has become more accessible than ever, with millions of people flying each year. In 2023, it was found that there were 34 million trips abroad from Canada (Statistics Canada). A good flight visualizer allows users to see the available flight they can take from their location to their chosen destination together with the various factors that people usually take into account when planning their flight. People usually see flying as the boring and inevitable part of travel, but this visualizer aims to give a chance to make decisions about their own flight by giving better insight about each flight; choosing the most optimal flying route based on various factors, users can compare their needs. Apart from the greenhouse gas emissions, cost effectiveness, and distance data that we provided to let users pick based on their budget and environmental awareness. We also have the currency exchange rates and airport shopping information to compare different flight options.
+
+    Clearly, we have been seeing that prices are increasing. In a CNBC article, A survey by the Bank of America showed that "spending at airlines and travel agencies is up a whopping 60\% year-over-year." (Holzhauer). Xie says that in 2027, most flights will additional costs from the International Civil Aviation Organization’s Carbon Offsetting and Reduction Scheme to reduce carbon emissions. Visualizing carbon emissions from flights will help people grasp the massive amounts of carbon that is produced from flights, and will help make further decisions based on that, such as further saving money. Our insights will help tourists and travelers decide which countries may be optimal for their budget. For example, when the Japanese Yen crashed in 2024, it may have been a good chance to visit Japan (Sposato). Our visualizer would show the exchange rates which is definitely an important component of traveling.
+    
+    Making flying decisions can be time consuming as there are various factors that people normally consider; our project allows users to visualize the flying option they have given their location and destination through a graphical interface, and compare different factors based on the user's preference. For example, the airport with stronger currency will be weighted more in the graph to give insight about the potential cost of traveling there. Furthermore, we will study the connectivity of each airport and find the most connected airports and more analysis.
+\endgroup
+
+\section*{Computational Plan}
+
+\subsection{How we will use Trees and/or graphs}
+    
+\begin{itemize}
+    \item We will visualize the international airports using graphs.
+    \item Each vertex will have information about a specific airport such as the airport's name, its country, the location (latitude and longitude), exchange rate, airport shopping information, etc.
+    \item Each edge will be weighted by many factors that affect the flight between two airports. This would include distance, cost, duration, weather, and more. We should note that a flight from A to B could have a different average duration than a flight from B to A (this may or may not be a factor that is included depending on the structure of a graph we decide to use).
+    \item We may use trees to create a classification model to predict different factors of a flight between airports.
+    \item Binary trees to hierarchically show costliness of travelling to a given country.
+
+
+\end{itemize}
+
+    
+\subsection{Sample Data}
+        We will start off our project by using a world airport dataset shown below.
+        
+        \url{https://ourairports.com/data/}
+
+        \noindent There are several datasets that we will look into. We will mainly use the airports.csv dataset.
+
+        
+        \begin{table}[H]
+            \centering
+            \begin{tabular}{|c|l|c|} \hline 
+                  Column&Sample Data& Description\\ \hline 
+                  id&2434& Airport identifier\\ \hline 
+                  type&large\_airport& Type of airport\\ \hline 
+                  name&London Heathrow Airport& Name of airport\\ \hline 
+                  latitude\_deg&51.470600& The airport latitude in decimal degrees (positive for north).\\ \hline 
+                  longitude\_deg&-0.461941& The airport longitude in decimal degrees (positive for east).\\ \hline 
+                Elevation& 83&Elevation of airport in feet\\\hline \hline 
+                  continent&EU& Continent of airport\\\hline
+            \end{tabular}
+        \caption{Sample Data}
+        \label{tab:my_table}
+            
+            
+        \end{table}
+        
+        
+\subsection{Computations to Perform}
+    \subsubsection{Main Computations}
+        \begin{itemize}
+            \item We will need to clean up the data and only consider international airports at first. This should be around 1200 airports which makes it more manageable. We will be using the \textbf{pandas} library to store the data. Specifically, we will storing them in a \href{https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html}{\textit{pandas dataframe}}. Using this library will allow us to use tools in the pandas library such as \href{https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html#pandas.read_csv}{read\_csv} and \href{https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.dropna.html}{dropna}. This will allow us to easily target rows and columns to perform actions for filtering and aggregation.
+            \item Then will will only include the variables that we want to consider (since there are around 20 and we do not need all of them).
+            \item We will create a dataclass that includes information about each airport
+            \item A dictionary will be used to map each airport's unique ID to the airport dataclass that we have developed.
+            \item Then, we will create our version of a graph (by including weighted edges). We were also considering using the \href{https://networkx.org/documentation/stable/reference/introduction.html#graphs}{graph ADT from the networkx library}. Before we do that, we would need to figure out how to weigh the edges based on the various factors (in the case that we don't, we will most likely weight it based on distance).
+            \item Finally, we want to study various things such as connectivity, shortest paths, which vertices have the most adjacent vertices, and more!
+        \end{itemize}
+    \subsubsection{Additional Computations}
+        These are extra things we want to add if we have time.
+        \begin{itemize}
+            \item A classification model, by using \href{https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html}{sklearn's DecisionTreeClassifier} or by developing a decision tree on our own, to predict flight cost, stops/layovers, or flight duration.
+            \item One key factor that we wanted to consider is the costliness of a country. For example, a country like the USA may be more "costly" compared to Canada due to its stronger currency. We wanted to implement trees (maybe a binary tree) to show the hierarchical structure of the costliness of a country.
+            \item An interactive UI using something like \href{https://github.com/googlemaps/google-maps-services-python}{Google Map Services API} instead of simply showing results.
+        \end{itemize}
+\subsection{Displaying and Reporting Results}
+    \begin{itemize}
+        \item \href{https://docs.python.org/3/library/tk.html}{Tkinter} library will be used to display all results and reports. 
+        \item We will use the networkx to visualize the graphs. Specifically the \href{https://networkx.org/documentation/stable/reference/drawing.html}{drawing} capabilities 
+        \item Additionally, for further understanding, we will use \href{https://plotly.com/python/network-graphs/}{ploty to display the graph}. We will mainly use this for further details, such as using a heatmap to show the most 'influential' airports (ie the international airports with the most connectiosn). This will be done by finding \href{https://networkx.org/documentation/stable/reference/classes/generated/networkx.Graph.adjacency.html}{graph adjacency} and using plotly to colour accordingly.
+    \end{itemize}
+
+\section*{References}
+\begingroup
+    \setlength{\parskip}{1em}
+\begin{hangparas}{.25in}{1}
+
+“ExchangeRate-API Support.” \textit{ExchangeRate-API}, \href{https://www.exchangerate-api.com/\#support}{https://www.exchangerate-api.com/\#support}. 
+
+Hagberg, Aric A., Daniel A. Schult, and Pieter J. Swart. “Exploring Network Structure, Dynamics, and Function Using NetworkX.” \textit{Proceedings of the 7th Python in Science Conference (SciPy2008)}, edited by Gäel Varoquaux, Travis Vaught, and Jarrod Millman, Pasadena, CA, 2008, pp. 11–15.
+
+Holzhauer, Brett. "Airline Ticket Prices Are Up 25\%, Outpacing Inflation — Here Are the Ways You Can Still Save." CNBC, 22 Nov. 2024, \\ \url{www.cnbc.com/select/airline-ticket-prices-are-up-25-percent-why-and-how-to-save/}.
+
+Megginson, David. Open Data Downloads. OurAirports, 31 Jan. 2025, \url{https://ourairports.com/data/}.
+
+NetworkX Developers. NetworkX Documentation. NetworkX, 2025, \url{https://networkx.org/}.
+
+“OpenSky Python API.” OpenSky Python API - The OpenSky Network API 1.4.0 Documentation, \\ \url{https://openskynetwork.github.io/opensky-api/python.html}.
+
+“Software for Complex Networks.” Software for Complex Networks - NetworkX 3.4.2 Documentation,\\ 
+\url{https://networkx.org/documentation/stable/index.html}.
+
+Sposato, William. "How Japan’s Yen Carry Trade Crashed Global Markets: An Obscure Strategy Wreaked Short-Lived Havoc." Foreign Policy, 8 Aug. 2024,\\ \url{https://foreignpolicy.com/2024/08/08/japan-crash-yen-carry-trade-global-markets/}.
+
+Statistics Canada. "National Travel Survey, Fourth Quarter 2023". 24 May 2024, \url{www150.statcan.gc.ca/n1/daily-quotidien/240524/dq240524c-eng.htm}.
+
+“The Accurate \& Reliableexchange Rate Api.” ExchangeRate, \url{www.exchangerate-api.com/}.
+
+“Plotly.” Plotly Python Graphing Library, \url{https://plotly.com/python/}.
+
+“Tkinter - Python Interface to TCL/TK.” Python Documentation, \\ \url{https://docs.python.org/3/library/tkinter.html}.
+
+Xie, Qin. "Why Is Travel Getting More Expensive? We Asked the Experts." National Geographic, 23 Dec. 2024, \url{www.nationalgeographic.com/travel/article/why-travel-is-more-expensive-we-asked-the-experts}.
+
+\end{hangparas}
+
+\endgroup
+
+% NOTE: LaTeX does have a built-in way of generating references automatically,
+% but it's a bit tricky to use so we STRONGLY recommend writing your references
+% manually, using a standard academic format like APA or MLA.
+% (E.g., https://owl.purdue.edu/owl/research_and_citation/apa_style/apa_formatting_and_style_guide/general_format.html)
+
+\end{document}

@@ -6,18 +6,28 @@ from airports_data import airports_df, routes_df
 
 
 @dataclass
-class Airport:
-    """Airport Item Dataclass"""
-    id: int
-    name: str
+class Location:
+    """Location illustrating the city, country, and timezone"""
     city: str
     country: str
+    timezone: str
+
+
+@dataclass
+class Airport:
+    """Airport Item Dataclass
+
+    TODO: ADD DESCRIPTION FOR EACH ATTRIBUTE
+    Instance Attributes:
+    - Coordinates on map using longitude and latitude
+    """
+    id: int
+    name: str
     iata: str
     icao: str
-    latitude: float
-    longitude: float
     altitude: int
-    timezone: str
+    coordinates: tuple[float, float]
+    location: Location
 
 
 class _AirportVertex:
@@ -33,26 +43,26 @@ class _AirportVertex:
         return len(self.neighbours)
 
 
-class Airports_Graph:
+class AirportsGraph:
     """Graph class"""
+
+    # Private Instance Attributes:
+    #     - _vertices:
+    #         A collection of the vertices contained in this graph.
+    #         Maps item to _Vertex object.
+
+    _vertices: dict[Any, _AirportVertex]
+
     def __init__(self):
         self._vertices = {}  # Airport vertices
 
-    def add_vertex(self, airport_id: int) -> None:
+    def add_vertex(self, airport_id: int, data: dict[str, Any]) -> None:
         """Add an airport to the graph using its id"""
         if airport_id not in self._vertices:
-            self._vertices[airport_id] = _AirportVertex(Airport(
-                airport_id,
-                airports_df.loc[airport_id, "Name"],
-                airports_df.loc[airport_id, "City"],
-                airports_df.loc[airport_id, "Country"],
-                airports_df.loc[airport_id, "IATA"],
-                airports_df.loc[airport_id, "ICAO"],
-                airports_df.loc[airport_id, "Latitude"],
-                airports_df.loc[airport_id, "Longitude"],
-                airports_df.loc[airport_id, "Altitude"],
-                airports_df.loc[airport_id, "Timezone"]
-            ))
+            self._vertices[airport_id] = _AirportVertex(
+                Airport(airport_id, data["Name"], data["IATA"], data["ICAO"], data["Altitude"],
+                        (data["Latitude"], data["Longitude"]),
+                        Location(data["City"], data["Country"], data["Timezone"])))
 
     def add_edge(self, source_id: int, destination_id: int) -> None:
         """Add an edge to the graph"""
@@ -69,19 +79,19 @@ class Airports_Graph:
     def get_neighbours(self, airport_id: int) -> dict[int, _AirportVertex]:
         """Get neighbours of a vertex"""
         return self._vertices[airport_id].neighbours
-    
+
     def get_edges(self) -> set[tuple[int, int]]:
         """Get all the edges in the graph"""
         edges = set()
         for airport_id, vertex in self._vertices.items():  # Iterate through the vertices
-            for neighbour_id in vertex.neighbours:         # Iterate through the neighbours
-                edges.add((airport_id, neighbour_id))      # Add the edge to the set
+            for neighbour_id in vertex.neighbours:  # Iterate through the neighbours
+                edges.add((airport_id, neighbour_id))  # Add the edge to the set
         return edges
-    
+
     def is_adjacent(self, source_id: int, destination_id: int) -> bool:
         """Check if two vertices are adjacent"""
         return destination_id in self._vertices[source_id].neighbours
-    
+
     def is_connected(self, source_id: int, destination_id: int, visited: set[int] = None) -> bool:
         """Check if two vertices are connected"""
         if visited is None:
@@ -106,3 +116,32 @@ class Airports_Graph:
     def __len__(self):
         """Get the number of vertices in the graph"""
         return len(self._vertices)
+
+
+def load_airports_graph() -> AirportsGraph:
+    """Build a graph"""
+
+    airports_graph = AirportsGraph()
+
+    airports_dict = airports_df.to_dict(orient="records")
+
+    for row in airports_dict:
+        airports_graph.add_vertex(row["Airport ID"], row)
+
+    return airports_graph
+
+
+if __name__ == "__main__":
+    pass
+
+    # import doctest
+
+    # doctest.testmod()
+
+    # import python_ta
+    #
+    # python_ta.check_all(config={
+    #     'extra-imports': [],  # the names (strs) of imported modules
+    #     'allowed-io': [],  # the names (strs) of functions that call print/open/input
+    #     'max-line-length':` 120
+    # })
