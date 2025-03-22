@@ -90,7 +90,7 @@ class AirportsGraph:
             self._edges[self._edge_indices[source_id]][self._edge_indices[destination_id]] = distance
             # self._edges[self._edge_indices[destination_id]][self._edge_indices[source_id]] = distance
         else:
-            print('aaa')
+            raise KeyError("Source ID or Destination ID do not exist in this graph.")
 
     def get_vertex(self, airport_id: int) -> Optional[_AirportVertex]:
         """Get a vertex from the graph"""
