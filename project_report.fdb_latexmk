@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1742695197.51708 "c:/Users/ebagu/Documents/GitHub/csc111p2/project_report.tex" "project_report.pdf" "project_report" 1742695198.25792 0
-  "C:/Users/ebagu/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1742695191 81760 910369822cd2d7c359b2482f4c0de4ca ""
+["pdflatex"] 1742695336.4101 "c:/Users/ebagu/Documents/GitHub/csc111p2/project_report.tex" "project_report.pdf" "project_report" 1742695337.15873 0
+  "C:/Users/ebagu/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1742695331 81760 910369822cd2d7c359b2482f4c0de4ca ""
   "C:/Users/ebagu/AppData/Local/MiKTeX/fonts/pk/ljfour/jknappen/ec/dpi600/tcrm1000.pk" 1742695197 11548 aeb6d9dabf4c36d3c10ce6a859db48a4 ""
   "C:/Users/ebagu/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1727663618 11948197 fc8dcf9a61f194d6bbac62fd92eaa91a ""
   "C:/Users/ebagu/AppData/Local/Programs/MiKTeX/fonts/tfm/jknappen/ec/tcrm1000.tfm" 993062508 1436 c7f957a372ef2fbe93c0982f96625e12 ""
@@ -76,10 +76,10 @@
   "C:/Users/ebagu/AppData/Local/Programs/MiKTeX/tex/latex/refcount/refcount.sty" 1576433952 9878 9e94e8fa600d95f9c7731bb21dfb67a4 ""
   "C:/Users/ebagu/AppData/Local/Programs/MiKTeX/tex/latex/rerunfilecheck/rerunfilecheck.sty" 1657800696 9714 ba3194bd52c8499b3f1e3eb91d409670 ""
   "C:/Users/ebagu/AppData/Local/Programs/MiKTeX/tex/latex/url/url.sty" 1388490452 12796 8edb7d69a20b857904dd0ea757c14ec9 ""
-  "c:/Users/ebagu/Documents/GitHub/csc111p2/project_report.tex" 1742692437 11969 17e1e0ccf65979e1865287a3a3b05c28 ""
-  "project_report.aux" 1742695198 1141 4e5dfb896ceac96e52e7af4c5a7b100d "pdflatex"
-  "project_report.out" 1742695198 1073 f5aee102416c9aa653bc61ce769e17d5 "pdflatex"
-  "project_report.tex" 1742692437 11969 17e1e0ccf65979e1865287a3a3b05c28 ""
+  "c:/Users/ebagu/Documents/GitHub/csc111p2/project_report.tex" 1742695335 11969 17e1e0ccf65979e1865287a3a3b05c28 ""
+  "project_report.aux" 1742695337 1141 4e5dfb896ceac96e52e7af4c5a7b100d "pdflatex"
+  "project_report.out" 1742695337 1073 f5aee102416c9aa653bc61ce769e17d5 "pdflatex"
+  "project_report.tex" 1742695335 11969 17e1e0ccf65979e1865287a3a3b05c28 ""
   (generated)
   "project_report.aux"
   "project_report.log"
