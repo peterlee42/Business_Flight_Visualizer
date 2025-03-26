@@ -40,7 +40,7 @@ routes_df = routes_df.astype(
 
 
 """----------COST OF LIVING DATA----------"""
-# TODO: Maybe add this as graph edge.
+# TODO: Maybe add this as graph edge or weighted vertex
 
 if __name__ == "__main__":
     print(airports_df.columns)
