@@ -7,6 +7,7 @@ from math import radians, cos, sin, asin, sqrt
 import pandas as pd
 
 from airports_data import airports_df, routes_df
+import networkx as nx
 
 
 @dataclass
@@ -115,10 +116,8 @@ class AirportsGraph:
             raise ValueError
         else:
             airport_index = self._edge_indices[airport_id]
-            row = self._edges[airport_index]
-
-            return {neighbour_id for neighbour_id, neighbour_index in self._edge_indices.items() if
-                    row[neighbour_index] != 0}
+            return {neighbour_id for neighbour_id, neighbour_index in self._edge_indices.items()
+                    if self._edges[airport_index][neighbour_index] != 0}
 
     def get_edges(self) -> list[list[int]]:
         """Get all the edges in the graph. This will return a matrix of edge weights."""
@@ -156,15 +155,16 @@ class AirportsGraph:
         if visited is None:
             visited = set()
 
-        visited.add(source_id)  # Add the source vertex to the visited set to avoid cycles
-
-        if source_id == destination_id:  # If the source vertex is the destination vertex
+        if source_id == destination_id:
             return True
 
-        for neighbour_id in self._edge_indices:
-            if neighbour_id not in visited:
-                if self.is_connected(neighbour_id, destination_id, visited):
+        visited.add(source_id)
+
+        for neighbour in self.get_neighbours(source_id):
+            if neighbour not in visited:
+                if self.is_connected(neighbour, destination_id, visited):
                     return True
+
         return False
 
     def __contains__(self, airport_id: int) -> bool:
@@ -178,6 +178,28 @@ class AirportsGraph:
     def __len__(self):
         """Get the number of vertices in the graph"""
         return len(self._vertices)
+
+    def to_networkx(self, max_vertices: int = 8000) -> nx.Graph:
+        """Convert this graph into a networkx Graph.
+
+        max_vertices specifies the maximum number of vertices that can appear in the graph.
+        (This is necessary to limit the visualization output for large graphs.)
+        """
+        g = nx.Graph()
+
+        # Add nodes using their names
+        id_to_name = {id: vertex.name for id, vertex in self._vertices.items()}
+        for name in id_to_name.values():
+            g.add_node(name)
+
+        # Add edges using names instead of numerical IDs
+        for source_id, source_index in self._edge_indices.items():
+            for dest_id, weight in enumerate(self._edges[source_index]):
+                if weight != 0:  # Only add actual edges
+                    g.add_edge(id_to_name[source_id], id_to_name[list(self._edge_indices.keys())[dest_id]],
+                               weight=weight)
+
+        return g
 
 
 def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
@@ -231,6 +253,6 @@ if __name__ == "__main__":
     g = load_airports_graph(airports_df, routes_df)
 
     # Testing
-    print(g.get_neighbours(1))
+    # print(g.get_neighbours(1))
 
-    print(g.is_connected(1, 2))
+    # print(g.is_connected(1, 2))

@@ -6,6 +6,7 @@ airport_columns = ["Airport ID", "Name", "City", "Country", "IATA", "ICAO", "Lat
                    "Altitude", "Timezone", "DST", "Tz database time zone", "Type", "Source"]
 
 airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
+# airports_data = "data/airports_small.dat"
 
 airports_df = pd.read_csv(airports_data, delimiter=",", names=airport_columns)
 
@@ -22,6 +23,8 @@ airport_columns = ["Airline", "Airline ID", "Source airport", "Source airport ID
                    "Destination airport", "Destination airport ID", "Codeshare", "Stops", "Equipment"]
 
 routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
+
+# routes_data = "data/routes_small.dat"
 
 routes_df = pd.read_csv(routes_data, delimiter=",", names=airport_columns)
 # Columns are not needed
