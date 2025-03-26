@@ -106,12 +106,22 @@ class AirportsGraph:
         """Get a vertex from the graph"""
         return self._vertices.get(airport_id)
 
-    # def get_neighbours(self, airport_id: int) -> dict[int, _AirportVertex]:
-    #     """Get neighbours of a vertex"""
-    #     return self._vertices[airport_id].neighbours
+    def get_neighbours(self, airport_id: int) -> set:
+        """Return a set of all neighbours ids of the given airport id"""
+
+        # TODO: Right now this method has a runtion of theta n. Maybe we can optimize it later.
+
+        if airport_id not in self._vertices:
+            raise ValueError
+        else:
+            airport_index = self._edge_indices[airport_id]
+            row = self._edges[airport_index]
+
+            return {neighbour_id for neighbour_id, neighbour_index in self._edge_indices.items() if
+                    row[neighbour_index] != 0}
 
     def get_edges(self) -> list[list[int]]:
-        """Get all the edges in the graph"""
+        """Get all the edges in the graph. This will return a matrix of edge weights."""
         return self._edges
 
     def get_distance(self, airport_id1: int, airport_id2: int) -> int:
@@ -134,22 +144,28 @@ class AirportsGraph:
 
         return int(round(c * r, 0))
 
-    # def is_adjacent(self, source_id: int, destination_id: int) -> bool:
-    #     """Check if two vertices are adjacent"""
-    #     return destination_id in self._vertices[source_id].neighbours
+    def is_adjacent(self, source_id: int, destination_id: int) -> bool:
+        """Check if two vertices are adjacent"""
+        src_id_index = self._edge_indices[source_id]
+        dest_id_index = self._edge_indices[destination_id]
 
-    # def is_connected(self, source_id: int, destination_id: int, visited: set[int] = None) -> bool:
-    #     """Check if two vertices are connected"""
-    #     if visited is None:
-    #         visited = set()
-    #     visited.add(source_id)  # Add the source vertex to the visited set to avoid cycles
-    #     if source_id == destination_id:  # If the source vertex is the destination vertex
-    #         return True
-    #     for neighbour_id in self._vertices[source_id].neighbours:
-    #         if neighbour_id not in visited:
-    #             if self.is_connected(neighbour_id, destination_id, visited):
-    #                 return True
-    #     return False
+        return self._edges[src_id_index][dest_id_index] != 0
+
+    def is_connected(self, source_id: int, destination_id: int, visited: set[int] = None) -> bool:
+        """Check if two vertices are connected"""
+        if visited is None:
+            visited = set()
+
+        visited.add(source_id)  # Add the source vertex to the visited set to avoid cycles
+
+        if source_id == destination_id:  # If the source vertex is the destination vertex
+            return True
+
+        for neighbour_id in self._edge_indices:
+            if neighbour_id not in visited:
+                if self.is_connected(neighbour_id, destination_id, visited):
+                    return True
+        return False
 
     def __contains__(self, airport_id: int) -> bool:
         """Check if an airport is in the graph"""
@@ -173,7 +189,7 @@ def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
 
     Note:
         Our implementation may look a bit unorganized in terms of indexing the rows, but this is a faster alternative to
-        iterating through the rows. In our tests it took ~3 seconds compared to >=7 seconds for other methods.
+        iterating through the rows. In our tests it took ~3 seconds compared to ~7 when converting df1 to a dictionary.
 
     """
 
@@ -212,17 +228,9 @@ if __name__ == "__main__":
     #     'max-line-length':` 120
     # })
 
-    import timeit
+    g = load_airports_graph(airports_df, routes_df)
 
-    # Code to time (assuming load_airports_graph is defined)
-    code = '''
-g = load_airports_graph(airports_df, routes_df)
-'''
+    # Testing
+    print(g.get_neighbours(1))
 
-    # Measure execution time (run it multiple times for better accuracy)
-    execution_time = timeit.timeit(code, number=10,
-                                   globals=globals())  # Use globals() to access variables in the global scope
-
-    # Calculate and print average execution time
-    average_time = execution_time / 10  # Divide by the number of runs (10 in this case)
-    print(f"Average execution time: {average_time} seconds")
+    print(g.is_connected(1, 2))
