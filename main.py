@@ -3,6 +3,9 @@ from __future__ import annotations
 from typing import Any, Optional
 from dataclasses import dataclass
 from math import radians, cos, sin, asin, sqrt
+
+import pandas as pd
+
 from airports_data import airports_df, routes_df
 
 
@@ -70,14 +73,12 @@ class AirportsGraph:
         self._edges = []
         self._edge_indices = {}
 
-    def add_vertex(self, airport_id: int, data: dict[str, Any]) -> None:
+    def add_vertex(self, airport_id: int, item: _AirportVertex) -> None:
         """Add an airport to the graph using its id"""
         if airport_id not in self._vertices:
-            self._vertices[airport_id] = _AirportVertex(airport_id, data["Name"], data["IATA"], data["ICAO"],
-                                                        data["Altitude"], (data["Latitude"], data["Longitude"]),
-                                                        Location(data["City"], data["Country"], data["Timezone"]))
+            self._vertices[airport_id] = item
 
-            # add new row of zeroes to make this an nxn matrix
+            # add new row of zeroes to make this a nxn matrix
             for row in self._edges:
                 row.append(0)
             self._edges.append([0] * (len(self._edges) + 1))  # add another column of zeroes
@@ -86,9 +87,18 @@ class AirportsGraph:
     def add_edge(self, source_id: int, destination_id: int) -> None:
         """Add an edge to the graph"""
         if source_id in self._vertices and destination_id in self._vertices:
-            distance = self.get_distance(source_id, destination_id)
-            self._edges[self._edge_indices[source_id]][self._edge_indices[destination_id]] = distance
-            # self._edges[self._edge_indices[destination_id]][self._edge_indices[source_id]] = distance
+            src_id_index = self._edge_indices[source_id]
+            dest_id_index = self._edge_indices[destination_id]
+
+            # case if edge already made from other side to improve speed. we assume 0 means edge does not exist.
+            if self._edges[src_id_index][dest_id_index] != 0:
+                return
+            else:
+                distance = self.get_distance(source_id, destination_id)
+
+                self._edges[src_id_index][dest_id_index] = distance
+                self._edges[dest_id_index][src_id_index] = distance
+
         else:
             raise KeyError("Source ID or Destination ID do not exist in this graph.")
 
@@ -154,31 +164,42 @@ class AirportsGraph:
         return len(self._vertices)
 
 
-def load_airports_graph() -> AirportsGraph:
-    """Build a graph"""
+def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
+    """Given two pandas DataFrame objects airports and routes, build and return an airport graph using the data
+
+    Preconditions:
+    - df1 is a valid airports dataframe
+    - df2 is a valid routes dataframe with the routes between airports that exist in df1
+
+    Note:
+        Our implementation may look a bit unorganized in terms of indexing the rows, but this is a faster alternative to
+        iterating through the rows. In our tests it took ~3 seconds compared to >=7 seconds for other methods.
+
+    """
 
     airports_graph = AirportsGraph()
 
-    # Create vertices
-    airports_dict = airports_df.to_dict(orient="records")
+    # Create vertices using itertuples instead of to_dict
+    for row in df1.itertuples(index=False):
+        airport_id = row[0]  # This corresponds to 'Airport ID'
+        current_item = _AirportVertex(airport_id, row[1], row[4], row[5], row[8],
+                                      (row[6], row[7]),
+                                      Location(row[2], row[3], row[9]))
+        airports_graph.add_vertex(airport_id, current_item)
 
-    for row in airports_dict:
-        airports_graph.add_vertex(row["Airport ID"], row)
+    # Create edges for routes using itertuples
+    for row in df2.itertuples(index=False):
+        source_airport_id = row[3]  # This corresponds to 'Source airport ID'
+        destination_airport_id = row[5]  # This corresponds to 'Destination airport ID'
 
-    # TODO: For now this thing only adds the source and destination routes. Maybe need to encorporate the airlines (?).
-    routes_dict = routes_df.to_dict(orient="records")
-    for row in routes_dict:
-        source_airport_id = row["Source airport ID"]
-        destination_airport_id = row["Destination airport ID"]
-        if source_airport_id in airports_dict and destination_airport_id in airports_dict:
+        # Ensure both airports exist in the airports dataframe
+        if source_airport_id in airports_graph and destination_airport_id in airports_graph:
             airports_graph.add_edge(source_airport_id, destination_airport_id)
 
     return airports_graph
 
 
 if __name__ == "__main__":
-    pass
-
     # import doctest
 
     # doctest.testmod()
@@ -190,4 +211,18 @@ if __name__ == "__main__":
     #     'allowed-io': [],  # the names (strs) of functions that call print/open/input
     #     'max-line-length':` 120
     # })
-    g = load_airports_graph()
+
+    import timeit
+
+    # Code to time (assuming load_airports_graph is defined)
+    code = '''
+g = load_airports_graph(airports_df, routes_df)
+'''
+
+    # Measure execution time (run it multiple times for better accuracy)
+    execution_time = timeit.timeit(code, number=10,
+                                   globals=globals())  # Use globals() to access variables in the global scope
+
+    # Calculate and print average execution time
+    average_time = execution_time / 10  # Divide by the number of runs (10 in this case)
+    print(f"Average execution time: {average_time} seconds")
