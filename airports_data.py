@@ -41,10 +41,17 @@ routes_df = routes_df.astype(
 routes_df = routes_df.astype(
     {col: "string" for col in routes_df.select_dtypes(include=["object"]).columns})
 
+"""----------FILTER DATA SO THAT ONLY AIRPORTS IN ROUTES WILL BE IN AIRPORTS DATAFRAME----------"""
+valid_airport_ids = set(routes_df["Source airport ID"]).union(set(routes_df["Destination airport ID"]))
+airports_df = airports_df[airports_df["Airport ID"].isin(valid_airport_ids)]
 
 """----------COST OF LIVING DATA----------"""
 # TODO: Maybe add this as graph edge or weighted vertex
 
 if __name__ == "__main__":
-    print(airports_df.columns)
-    print(routes_df.columns)
+    print(airports_df.shape)
+    print(routes_df.shape)
+
+    # with open("countries.txt", "w", encoding="utf-8") as file:
+    #     for country in sorted(airports_df["Country"].unique()):
+    #         file.write(country + "\n")
