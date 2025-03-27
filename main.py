@@ -6,7 +6,7 @@ from math import radians, cos, sin, asin, sqrt
 
 import pandas as pd
 
-from airports_data import airports_df, routes_df
+from airports_data import load_airport_and_route_data
 import networkx as nx
 
 
@@ -74,6 +74,8 @@ class AirportsGraph:
         self._edges = []
         self._edge_indices = {}
 
+        # TODO: Fix implementation and use this -> _adjacency_list: dict[Any, set[tuple[Any, float]]]
+
     def add_vertex(self, airport_id: int, item: _AirportVertex) -> None:
         """Add an airport to the graph using its id"""
         if airport_id not in self._vertices:
@@ -82,7 +84,8 @@ class AirportsGraph:
             # add new row of zeroes to make this a nxn matrix
             for row in self._edges:
                 row.append(0)
-            self._edges.append([0] * (len(self._edges) + 1))  # add another column of zeroes
+            # add another column of zeroes
+            self._edges.append([0] * (len(self._edges) + 1))
             self._edge_indices[airport_id] = len(self._edge_indices) - 1
 
     def add_edge(self, source_id: int, destination_id: int) -> None:
@@ -101,7 +104,8 @@ class AirportsGraph:
                 self._edges[dest_id_index][src_id_index] = distance
 
         else:
-            raise KeyError("Source ID or Destination ID do not exist in this graph.")
+            raise KeyError(
+                "Source ID or Destination ID do not exist in this graph.")
 
     def get_vertex(self, airport_id: int) -> Optional[_AirportVertex]:
         """Get a vertex from the graph"""
@@ -110,14 +114,19 @@ class AirportsGraph:
     def get_neighbours(self, airport_id: int) -> set:
         """Return a set of all neighbours ids of the given airport id"""
 
-        # TODO: Right now this method has a runtion of theta n. Maybe we can optimize it later.
-
         if airport_id not in self._vertices:
             raise ValueError
         else:
             airport_index = self._edge_indices[airport_id]
-            return {neighbour_id for neighbour_id, neighbour_index in self._edge_indices.items()
-                    if self._edges[airport_index][neighbour_index] != 0}
+            neighbours = set()
+
+            for i, weight in enumerate(self._edges[airport_index]):
+                if weight != 0:
+                    for other_airport_id, other_index in self._edge_indices.items():
+                        if other_index == i:
+                            neighbours.add(other_airport_id)
+
+            return neighbours
 
     def get_edges(self) -> list[list[int]]:
         """Get all the edges in the graph. This will return a matrix of edge weights."""
@@ -179,27 +188,44 @@ class AirportsGraph:
         """Get the number of vertices in the graph"""
         return len(self._vertices)
 
-    def to_networkx(self, max_vertices: int = 8000) -> nx.Graph:
+    def to_networkx(self, max_vertices: int = 5000) -> nx.Graph:
         """Convert this graph into a networkx Graph.
 
         max_vertices specifies the maximum number of vertices that can appear in the graph.
         (This is necessary to limit the visualization output for large graphs.)
         """
-        g = nx.Graph()
+        # g = nx.Graph()
+        #
+        # for airport_id in self._vertices[:max_vertices]:
+        #     g.add_node(self._vertices[airport_id].name, )
+        #
+        # # Add edges using names instead of numerical IDs
+        # for source_id, source_index in self._edge_indices.items():
+        #     for dest_id, weight in enumerate(self._edges[source_index]):
+        #         if weight != 0:  # Only add actual edges
+        #             g.add_edge(id_to_name[source_id], id_to_name[list(self._edge_indices.keys())[dest_id]],
+        #                        weight=weight)
+        #
+        # return g
 
-        # Add nodes using their names
-        id_to_name = {id: vertex.name for id, vertex in self._vertices.items()}
-        for name in id_to_name.values():
-            g.add_node(name)
+        graph_nx = nx.Graph()
+        for v in self._vertices.values():
+            graph_nx.add_node(
+                v.name, latitude=v.coordinates[0], longitude=v.coordinates[1])
 
-        # Add edges using names instead of numerical IDs
-        for source_id, source_index in self._edge_indices.items():
-            for dest_id, weight in enumerate(self._edges[source_index]):
-                if weight != 0:  # Only add actual edges
-                    g.add_edge(id_to_name[source_id], id_to_name[list(self._edge_indices.keys())[dest_id]],
-                               weight=weight)
+            for u in self.get_neighbours(v.id):
+                u_vertex = self._vertices[u]
+                if graph_nx.number_of_nodes() < max_vertices:
+                    graph_nx.add_node(u_vertex.name, latitude=u_vertex.coordinates[0],
+                                      longitude=u_vertex.coordinates[1])
 
-        return g
+                if u_vertex.name in graph_nx.nodes:
+                    graph_nx.add_edge(v.name, u_vertex.name)
+
+            if graph_nx.number_of_nodes() >= max_vertices:
+                break
+
+        return graph_nx
 
 
 def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
@@ -210,9 +236,8 @@ def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
     - df2 is a valid routes dataframe with the routes between airports that exist in df1
 
     Note:
-        Our implementation may look a bit unorganized in terms of indexing the rows, but this is a faster alternative to
-        iterating through the rows. In our tests it took ~3 seconds compared to ~7 when converting df1 to a dictionary.
-
+        Our implementation may look a bit unorganized due to indexing the rows, but this is a faster alternative to
+        iterating through dataframe objects.
     """
 
     airports_graph = AirportsGraph()
@@ -228,7 +253,8 @@ def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
     # Create edges for routes using itertuples
     for row in df2.itertuples(index=False):
         source_airport_id = row[3]  # This corresponds to 'Source airport ID'
-        destination_airport_id = row[5]  # This corresponds to 'Destination airport ID'
+        # This corresponds to 'Destination airport ID'
+        destination_airport_id = row[5]
 
         # Ensure both airports exist in the airports dataframe
         if source_airport_id in airports_graph and destination_airport_id in airports_graph:
@@ -249,8 +275,20 @@ if __name__ == "__main__":
     #     'allowed-io': [],  # the names (strs) of functions that call print/open/input
     #     'max-line-length':` 120
     # })
+    from visualizer import visualize_graph
+
+    # airports_data = "data/airports_small.dat"
+    # routes_data = "data/routes_small.dat"
+
+    airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
+    routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
+
+    airports_df, routes_df = load_airport_and_route_data(
+        airports_data, routes_data)
 
     g = load_airports_graph(airports_df, routes_df)
+
+    visualize_graph(g)
 
     # Testing
     # print(g.get_neighbours(1))

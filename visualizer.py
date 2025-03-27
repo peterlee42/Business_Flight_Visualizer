@@ -20,145 +20,71 @@ please consult our Course Syllabus.
 
 This file is Copyright (c) 2025 Mario Badr, David Liu, and Isaac Waller.
 """
-import networkx as nx
-from plotly.graph_objs import Scatter, Figure
+import plotly.graph_objects as go
 
 import main
 
 import plotly.io as plo
+
 plo.renderers.default = 'browser'
 
-# NOTE THIS HAS BEEN COPY AND PASTED FROM EX 3/4.
 
-# Colours to use when visualizing different clusters.
-COLOUR_SCHEME = [
-    '#2E91E5', '#E15F99', '#1CA71C', '#FB0D0D', '#DA16FF', '#222A2A', '#B68100',
-    '#750D86', '#EB663B', '#511CFB', '#00A08B', '#FB00D1', '#FC0080', '#B2828D',
-    '#6C7C32', '#778AAE', '#862A16', '#A777F1', '#620042', '#1616A7', '#DA60CA',
-    '#6C4516', '#0D2A63', '#AF0038'
-]
-
-LINE_COLOUR = 'rgb(210,210,210)'
-VERTEX_BORDER_COLOUR = 'rgb(50, 50, 50)'
-vertex_colour = 'rgb(89, 205, 105)'
-
-
-def visualize_graph(graph: main.AirportsGraph,
-                    layout: str = 'spring_layout',
-                    max_vertices: int = 8000,
-                    output_file: str = '') -> None:
-    """Use plotly and networkx to visualize the given graph.
-
-    Optional arguments:
-        - layout: which graph layout algorithm to use
-        - max_vertices: the maximum number of vertices that can appear in the graph
-        - output_file: a filename to save the plotly image to (rather than displaying
-            in your web browser)
-    """
+def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 5000, output_file: str = ''):
+    """Visualize graph on map"""
     graph_nx = graph.to_networkx(max_vertices)
-    pos = getattr(nx, layout)(graph_nx)
 
-    x_values = [pos[k][0] for k in graph_nx.nodes]
-    y_values = [pos[k][1] for k in graph_nx.nodes]
-    labels = list(graph_nx.nodes)
-    colours = [vertex_colour] * len(labels)
+    latitudes = []
+    longitudes = []
+    node_names = []
 
-    x_edges, y_edges = [], []
+    for node in graph_nx.nodes:
+        lat = graph_nx.nodes[node]['latitude']
+        lon = graph_nx.nodes[node]['longitude']
+        latitudes.append(lat)
+        longitudes.append(lon)
+        node_names.append(node)
+
+    edge_lons = []
+    edge_lats = []
     for edge in graph_nx.edges:
-        x_edges += [pos[edge[0]][0], pos[edge[1]][0], None]
-        y_edges += [pos[edge[0]][1], pos[edge[1]][1], None]
+        node1, node2 = edge
+        lat1, lon1 = graph_nx.nodes[node1]['latitude'], graph_nx.nodes[node1]['longitude']
+        lat2, lon2 = graph_nx.nodes[node2]['latitude'], graph_nx.nodes[node2]['longitude']
+        # None separates the line segments
+        edge_lats.extend([lat1, lat2, None])
+        edge_lons.extend([lon1, lon2, None])
 
-    trace_edges = Scatter(
-        x=x_edges, y=y_edges, mode='lines', name='edges',
-        line=dict(color=LINE_COLOUR, width=1), hoverinfo='none'
+    fig = go.Figure(go.Scattermap(
+        mode="lines",
+        lon=edge_lons,
+        lat=edge_lats,
+        line={'color': '#11cd2f', 'width': 2},
+        name='Airport Connections',
+        opacity=0.2
+    ))
+
+    fig.add_trace(go.Scattermap(
+        mode="markers",
+        lon=longitudes,
+        lat=latitudes,
+        text=node_names,
+        name='Airports',
+        marker={'size': 6, 'color': 'blue'},
+        opacity=0.6
+    ))
+
+    fig.update_layout(
+        margin={'l': 0, 't': 0, 'b': 0, 'r': 0},
+        map={
+            'center': {'lon': 10, 'lat': 10},
+            'style': "open-street-map",
+            'center': {'lon': -20, 'lat': -20},
+            'zoom': 1,
+        },
+        title="Airports Network Visualization"
     )
-
-    trace_nodes = Scatter(
-        x=x_values, y=y_values, mode='markers', name='nodes',
-        marker=dict(symbol='circle-dot', size=5, color=colours,
-                    line=dict(color=VERTEX_BORDER_COLOUR, width=0.5)),
-        text=labels, hovertemplate='%{text}', hoverlabel={'namelength': 0}
-    )
-
-    fig = Figure(data=[trace_edges, trace_nodes])
-    fig.update_layout(showlegend=False)
-    fig.update_xaxes(showgrid=False, zeroline=False, visible=False)
-    fig.update_yaxes(showgrid=False, zeroline=False, visible=False)
 
     if output_file:
         fig.write_image(output_file)
     else:
         fig.show()
-
-
-# def visualize_graph_clusters(graph: main.AirportsGraph, clusters: list[set],
-#                              layout: str = 'spring_layout',
-#                              max_vertices: int = 5000,
-#                              output_file: str = '') -> None:
-#     """Visualize the given graph, using different colours to illustrate the different clusters.
-#
-#     Hides all edges that go from one cluster to another. (This helps the graph layout algorithm
-#     positions vertices in the same cluster close together.)
-#
-#     Same optional arguments as visualize_graph (see that function for details).
-#     """
-#     graph_nx = graph.to_networkx(max_vertices)
-#     all_edges = list(graph_nx.edges)
-#     for edge in all_edges:
-#         # Check if edge is within the same cluster
-#         if any((edge[0] in cluster) != (edge[1] in cluster) for cluster in clusters):
-#             graph_nx.remove_edge(edge[0], edge[1])
-#
-#     pos = getattr(nx, layout)(graph_nx)
-#
-#     x_values = [pos[k][0] for k in graph_nx.nodes]
-#     y_values = [pos[k][1] for k in graph_nx.nodes]
-#     labels = list(graph_nx.nodes)
-#
-#     colors = []
-#     for k in graph_nx.nodes:
-#         for i, c in enumerate(clusters):
-#             if k in c:
-#                 colors.append(COLOUR_SCHEME[i % len(COLOUR_SCHEME)])
-#                 break
-#         else:
-#             colors.append(BOOK_COLOUR)
-#
-#     x_edges = []
-#     y_edges = []
-#     for edge in graph_nx.edges:
-#         x_edges += [pos[edge[0]][0], pos[edge[1]][0], None]
-#         y_edges += [pos[edge[0]][1], pos[edge[1]][1], None]
-#
-#     trace3 = Scatter(x=x_edges,
-#                      y=y_edges,
-#                      mode='lines',
-#                      name='edges',
-#                      line=dict(color=LINE_COLOUR, width=1),
-#                      hoverinfo='none'
-#                      )
-#     trace4 = Scatter(x=x_values,
-#                      y=y_values,
-#                      mode='markers',
-#                      name='nodes',
-#                      marker=dict(symbol='circle-dot',
-#                                  size=5,
-#                                  color=colors,
-#                                  line=dict(color=VERTEX_BORDER_COLOUR, width=0.5)
-#                                  ),
-#                      text=labels,
-#                      hovertemplate='%{text}',
-#                      hoverlabel={'namelength': 0}
-#                      )
-#
-#     data1 = [trace3, trace4]
-#     fig = Figure(data=data1)
-#     fig.update_layout({'showlegend': False})
-#     fig.update_xaxes(showgrid=False, zeroline=False, visible=False)
-#     fig.update_yaxes(showgrid=False, zeroline=False, visible=False)
-#     fig.show()
-#
-#     if output_file == '':
-#         fig.show()
-#     else:
-#         fig.write_image(output_file)
