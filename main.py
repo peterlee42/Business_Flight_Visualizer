@@ -12,11 +12,17 @@ import networkx as nx
 
 @dataclass
 class Location:
-    """Location illustrating the city, country, and timezone
+    """A location, showing the city, country, and timezone
 
-    TODO: ADD DESCRIPTION FOR EACH ATTRIBUTE
     Instance Attributes:
-    -
+        - city: The city of the location
+        - country: The country for the location
+        - timezone: The timezone for the location
+
+    Representation Invariants:
+        - self.city != ''
+        - self.country != ''
+        - self.timezone != ''
     """
     city: str
     country: str
@@ -26,9 +32,22 @@ class Location:
 class _AirportVertex:
     """Airport Vertex Class
 
-    TODO: ADD DESCRIPTION FOR EACH ATTRIBUTE
     Instance Attributes:
-    - Coordinates on map using longitude and latitude
+    - id: The OpenFlights id of an airport
+    - name: The name of an airport
+    - iata: The IATA code of an airport
+    - icao: The ICAO code of an airport
+    - altitude: The altitude of an airport
+    - coordinates: The coordinates of an airport on map using longitude and latitude
+    - location: The location of an airport
+
+    Representation Invariants:
+    - self.id >= 0
+    - self.name != ''
+    - self.iata != ''
+    - self.icao != ''
+    - self.altitude > 0
+    - self.coordinates != tuple()
     """
     id: int
     name: str
@@ -50,10 +69,7 @@ class _AirportVertex:
 
 
 class AirportsGraph:
-    """Graph class
-
-    TODO: ADD DOCSTRING
-    """
+    """A weighted graph used to represent airport connections and the distances of the distance of each route"""
 
     # Private Instance Attributes:
     #     - _vertices:
@@ -74,7 +90,7 @@ class AirportsGraph:
         self._edges = []
         self._edge_indices = {}
 
-        # TODO: Fix implementation and use this -> _adjacency_list: dict[Any, set[tuple[Any, float]]]
+        # TODO: Fix implementation (maybe do one like EX4)
 
     def add_vertex(self, airport_id: int, item: _AirportVertex) -> None:
         """Add an airport to the graph using its id"""
@@ -194,20 +210,6 @@ class AirportsGraph:
         max_vertices specifies the maximum number of vertices that can appear in the graph.
         (This is necessary to limit the visualization output for large graphs.)
         """
-        # g = nx.Graph()
-        #
-        # for airport_id in self._vertices[:max_vertices]:
-        #     g.add_node(self._vertices[airport_id].name, )
-        #
-        # # Add edges using names instead of numerical IDs
-        # for source_id, source_index in self._edge_indices.items():
-        #     for dest_id, weight in enumerate(self._edges[source_index]):
-        #         if weight != 0:  # Only add actual edges
-        #             g.add_edge(id_to_name[source_id], id_to_name[list(self._edge_indices.keys())[dest_id]],
-        #                        weight=weight)
-        #
-        # return g
-
         graph_nx = nx.Graph()
         for v in self._vertices.values():
             graph_nx.add_node(
@@ -232,11 +234,14 @@ class AirportsGraph:
         # List check
         for airport_id in airport_ids:
             if airport_id not in self._vertices:
-                raise KeyError(f"Airport ID {airport_id} not found in the graph.")
+                raise KeyError(
+                    f"Airport ID {airport_id} not found in the graph.")
 
-        close_airports = [v for v in self.get_neighbours(airport_ids[0]) if self.get_distance(airport_ids[0], v) <= max_distance]
+        close_airports = [v for v in self.get_neighbours(
+            airport_ids[0]) if self.get_distance(airport_ids[0], v) <= max_distance]
         for airport_id in airport_ids[1:]:
-            close_airports = [v for v in close_airports if self.get_distance(airport_id, v) <= max_distance]
+            close_airports = [v for v in close_airports if self.get_distance(
+                airport_id, v) <= max_distance]
         return close_airports
 
 
