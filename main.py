@@ -222,14 +222,18 @@ class AirportsGraph:
                                       longitude=u_vertex.coordinates[1])
 
                 if u_vertex.name in graph_nx.nodes:
-                    graph_nx.add_edge(v.name, u_vertex.name)
+                    ind1 = self._edge_indices[u_vertex.id]
+                    ind2 = self._edge_indices[v.id]
+                    distance = self._edges[ind1][ind2]
+                    graph_nx.add_edge(v.name, u_vertex.name, weight = distance)
 
             if graph_nx.number_of_nodes() >= max_vertices:
                 break
 
         return graph_nx
-
+    
     def get_close_airports(self, airport_ids: list[int], max_distance: int) -> list[int]:
+<<<<<<< HEAD
         """Get a dictionary of airports within max_distance from the given airport ids"""
         # List check
         for airport_id in airport_ids:
@@ -243,6 +247,18 @@ class AirportsGraph:
             close_airports = [v for v in close_airports if self.get_distance(
                 airport_id, v) <= max_distance]
         return close_airports
+=======
+         """Get a dictionary of airports within max_distance from the given airport ids"""
+         # List check
+         for airport_id in airport_ids:
+             if airport_id not in self._vertices:
+                 raise KeyError(f"Airport ID {airport_id} not found in the graph.")
+ 
+         close_airports = [v for v in self.get_neighbours(airport_ids[0]) if self.get_distance(airport_ids[0], v) <= max_distance]
+         for airport_id in airport_ids[1:]:
+             close_airports = [v for v in close_airports if self.get_distance(airport_id, v) <= max_distance]
+         return close_airports
+>>>>>>> 845cee015e0680bc790827768684043fde465ead
 
 
 def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
