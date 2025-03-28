@@ -229,6 +229,18 @@ class AirportsGraph:
                 break
 
         return graph_nx
+    
+    def get_close_airports(self, airport_ids: list[int], max_distance: int) -> list[int]:
+         """Get a dictionary of airports within max_distance from the given airport ids"""
+         # List check
+         for airport_id in airport_ids:
+             if airport_id not in self._vertices:
+                 raise KeyError(f"Airport ID {airport_id} not found in the graph.")
+ 
+         close_airports = [v for v in self.get_neighbours(airport_ids[0]) if self.get_distance(airport_ids[0], v) <= max_distance]
+         for airport_id in airport_ids[1:]:
+             close_airports = [v for v in close_airports if self.get_distance(airport_id, v) <= max_distance]
+         return close_airports
 
 
 def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
