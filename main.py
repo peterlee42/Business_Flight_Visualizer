@@ -194,20 +194,6 @@ class AirportsGraph:
         max_vertices specifies the maximum number of vertices that can appear in the graph.
         (This is necessary to limit the visualization output for large graphs.)
         """
-        # g = nx.Graph()
-        #
-        # for airport_id in self._vertices[:max_vertices]:
-        #     g.add_node(self._vertices[airport_id].name, )
-        #
-        # # Add edges using names instead of numerical IDs
-        # for source_id, source_index in self._edge_indices.items():
-        #     for dest_id, weight in enumerate(self._edges[source_index]):
-        #         if weight != 0:  # Only add actual edges
-        #             g.add_edge(id_to_name[source_id], id_to_name[list(self._edge_indices.keys())[dest_id]],
-        #                        weight=weight)
-        #
-        # return g
-
         graph_nx = nx.Graph()
         for v in self._vertices.values():
             graph_nx.add_node(
