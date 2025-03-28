@@ -194,6 +194,20 @@ class AirportsGraph:
         max_vertices specifies the maximum number of vertices that can appear in the graph.
         (This is necessary to limit the visualization output for large graphs.)
         """
+        # g = nx.Graph()
+        #
+        # for airport_id in self._vertices[:max_vertices]:
+        #     g.add_node(self._vertices[airport_id].name, )
+        #
+        # # Add edges using names instead of numerical IDs
+        # for source_id, source_index in self._edge_indices.items():
+        #     for dest_id, weight in enumerate(self._edges[source_index]):
+        #         if weight != 0:  # Only add actual edges
+        #             g.add_edge(id_to_name[source_id], id_to_name[list(self._edge_indices.keys())[dest_id]],
+        #                        weight=weight)
+        #
+        # return g
+
         graph_nx = nx.Graph()
         for v in self._vertices.values():
             graph_nx.add_node(
@@ -206,24 +220,15 @@ class AirportsGraph:
                                       longitude=u_vertex.coordinates[1])
 
                 if u_vertex.name in graph_nx.nodes:
-                    graph_nx.add_edge(v.name, u_vertex.name)
+                    ind1 = self._edge_indices[u_vertex.id]
+                    ind2 = self._edge_indices[v.id]
+                    distance = self._edges[ind1][ind2]
+                    graph_nx.add_edge(v.name, u_vertex.name, weight = distance)
 
             if graph_nx.number_of_nodes() >= max_vertices:
                 break
 
         return graph_nx
-
-    def get_close_airports(self, airport_ids: list[int], max_distance: int) -> list[int]:
-        """Get a dictionary of airports within max_distance from the given airport ids"""
-        # List check
-        for airport_id in airport_ids:
-            if airport_id not in self._vertices:
-                raise KeyError(f"Airport ID {airport_id} not found in the graph.")
-
-        close_airports = [v for v in self.get_neighbours(airport_ids[0]) if self.get_distance(airport_ids[0], v) <= max_distance]
-        for airport_id in airport_ids[1:]:
-            close_airports = [v for v in close_airports if self.get_distance(airport_id, v) <= max_distance]
-        return close_airports
 
 
 def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
@@ -278,8 +283,11 @@ if __name__ == "__main__":
     # airports_data = "data/airports_small.dat"
     # routes_data = "data/routes_small.dat"
 
-    airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
-    routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
+    #airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
+    airports_data = "/Users/billychen/Downloads/coding/school-project/csc111p2-main/data/airports_small.dat"
+
+    #routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
+    routes_data = "/Users/billychen/Downloads/coding/school-project/csc111p2-main/data/routes_small.dat"
 
     airports_df, routes_df = load_airport_and_route_data(
         airports_data, routes_data)
