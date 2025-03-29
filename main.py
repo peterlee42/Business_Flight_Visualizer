@@ -211,13 +211,13 @@ class AirportsGraph:
         graph_nx = nx.Graph()
         for v in self._vertices.values():
             graph_nx.add_node(
-                v.name, latitude=v.coordinates[0], longitude=v.coordinates[1])
+                v.name, latitude=v.coordinates[0], longitude=v.coordinates[1], id = v.id)
 
             for u in self.get_neighbours(v.id):
                 u_vertex = self._vertices[u]
                 if graph_nx.number_of_nodes() < max_vertices:
                     graph_nx.add_node(u_vertex.name, latitude=u_vertex.coordinates[0],
-                                      longitude=u_vertex.coordinates[1])
+                                      longitude=u_vertex.coordinates[1], id = u_vertex.id)
 
                 if u_vertex.name in graph_nx.nodes:
                     ind1 = self._edge_indices[u_vertex.id]
@@ -230,8 +230,8 @@ class AirportsGraph:
 
         return graph_nx
     
-    def get_close_airports(self, airport_ids: list[int], max_distance: int) -> list[int]:
-         """Get a dictionary of airports within max_distance from the given airport ids"""
+    def get_close_airports(self, airport_ids: list[int], max_distance: int) -> list[str]:
+         """Get a list of airports name within max_distance from the given airport ids"""
          # List check
          for airport_id in airport_ids:
              if airport_id not in self._vertices:
@@ -240,7 +240,10 @@ class AirportsGraph:
          close_airports = [v for v in self.get_neighbours(airport_ids[0]) if self.get_distance(airport_ids[0], v) <= max_distance]
          for airport_id in airport_ids[1:]:
              close_airports = [v for v in close_airports if self.get_distance(airport_id, v) <= max_distance]
-         return close_airports
+         result = []
+         for i in close_airports:
+             result.append(self._vertices[i].name)
+         return result
 
 
 def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
@@ -296,10 +299,13 @@ if __name__ == "__main__":
     # routes_data = "data/routes_small.dat"
 
     #airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
-    airports_data = "/Users/billychen/Downloads/coding/school-project/csc111p2-main/data/airports_small.dat"
+    #airports_data = "/Users/billychen/Downloads/coding/school-project/csc111p2-main/data/airports_small.dat"
 
     #routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
-    routes_data = "/Users/billychen/Downloads/coding/school-project/csc111p2-main/data/routes_small.dat"
+    #routes_data = "/Users/billychen/Downloads/coding/school-project/csc111p2-main/data/routes_small.dat"
+
+    airports_data = "data/airports_small.dat"
+    routes_data = "data/routes_small.dat"
 
     airports_df, routes_df = load_airport_and_route_data(
         airports_data, routes_data)
