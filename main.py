@@ -12,17 +12,11 @@ import networkx as nx
 
 @dataclass
 class Location:
-    """A location, showing the city, country, and timezone
+    """Location illustrating the city, country, and timezone
 
+    TODO: ADD DESCRIPTION FOR EACH ATTRIBUTE
     Instance Attributes:
-        - city: The city of the location
-        - country: The country for the location
-        - timezone: The timezone for the location
-
-    Representation Invariants:
-        - self.city != ''
-        - self.country != ''
-        - self.timezone != ''
+    -
     """
     city: str
     country: str
@@ -32,22 +26,9 @@ class Location:
 class _AirportVertex:
     """Airport Vertex Class
 
+    TODO: ADD DESCRIPTION FOR EACH ATTRIBUTE
     Instance Attributes:
-    - id: The OpenFlights id of an airport
-    - name: The name of an airport
-    - iata: The IATA code of an airport
-    - icao: The ICAO code of an airport
-    - altitude: The altitude of an airport
-    - coordinates: The coordinates of an airport on map using longitude and latitude
-    - location: The location of an airport
-
-    Representation Invariants:
-    - self.id >= 0
-    - self.name != ''
-    - self.iata != ''
-    - self.icao != ''
-    - self.altitude > 0
-    - self.coordinates != tuple()
+    - Coordinates on map using longitude and latitude
     """
     id: int
     name: str
@@ -69,7 +50,10 @@ class _AirportVertex:
 
 
 class AirportsGraph:
-    """A weighted graph used to represent airport connections and the distances of the distance of each route"""
+    """Graph class
+
+    TODO: ADD DOCSTRING
+    """
 
     # Private Instance Attributes:
     #     - _vertices:
@@ -90,7 +74,7 @@ class AirportsGraph:
         self._edges = []
         self._edge_indices = {}
 
-        # TODO: Fix implementation (maybe do one like EX4)
+        # TODO: Fix implementation and use this -> _adjacency_list: dict[Any, set[tuple[Any, float]]]
 
     def add_vertex(self, airport_id: int, item: _AirportVertex) -> None:
         """Add an airport to the graph using its id"""
@@ -210,42 +194,56 @@ class AirportsGraph:
         max_vertices specifies the maximum number of vertices that can appear in the graph.
         (This is necessary to limit the visualization output for large graphs.)
         """
+        # g = nx.Graph()
+        #
+        # for airport_id in self._vertices[:max_vertices]:
+        #     g.add_node(self._vertices[airport_id].name, )
+        #
+        # # Add edges using names instead of numerical IDs
+        # for source_id, source_index in self._edge_indices.items():
+        #     for dest_id, weight in enumerate(self._edges[source_index]):
+        #         if weight != 0:  # Only add actual edges
+        #             g.add_edge(id_to_name[source_id], id_to_name[list(self._edge_indices.keys())[dest_id]],
+        #                        weight=weight)
+        #
+        # return g
+
         graph_nx = nx.Graph()
         for v in self._vertices.values():
             graph_nx.add_node(
-                v.name, latitude=v.coordinates[0], longitude=v.coordinates[1])
+                v.name, latitude=v.coordinates[0], longitude=v.coordinates[1], id = v.id)
 
             for u in self.get_neighbours(v.id):
                 u_vertex = self._vertices[u]
                 if graph_nx.number_of_nodes() < max_vertices:
                     graph_nx.add_node(u_vertex.name, latitude=u_vertex.coordinates[0],
-                                      longitude=u_vertex.coordinates[1])
+                                      longitude=u_vertex.coordinates[1], id = u_vertex.id)
 
                 if u_vertex.name in graph_nx.nodes:
                     ind1 = self._edge_indices[u_vertex.id]
                     ind2 = self._edge_indices[v.id]
                     distance = self._edges[ind1][ind2]
-                    graph_nx.add_edge(v.name, u_vertex.name, weight=distance)
+                    graph_nx.add_edge(v.name, u_vertex.name, weight = distance)
 
             if graph_nx.number_of_nodes() >= max_vertices:
                 break
 
         return graph_nx
-
-    def get_close_airports(self, airport_ids: list[int], max_distance: int) -> list[int]:
-        """Get a dictionary of airports within max_distance from the given airport ids"""
-        # List check
-        for airport_id in airport_ids:
-            if airport_id not in self._vertices:
-                raise KeyError(
-                    f"Airport ID {airport_id} not found in the graph.")
-
-        close_airports = [v for v in self.get_neighbours(
-            airport_ids[0]) if self.get_distance(airport_ids[0], v) <= max_distance]
-        for airport_id in airport_ids[1:]:
-            close_airports = [v for v in close_airports if self.get_distance(
-                airport_id, v) <= max_distance]
-        return close_airports
+    
+    def get_close_airports(self, airport_ids: list[int], max_distance: int) -> list[str]:
+         """Get a list of airports name within max_distance from the given airport ids"""
+         # List check
+         for airport_id in airport_ids:
+             if airport_id not in self._vertices:
+                 raise KeyError(f"Airport ID {airport_id} not found in the graph.")
+ 
+         close_airports = [v for v in self.get_neighbours(airport_ids[0]) if self.get_distance(airport_ids[0], v) <= max_distance]
+         for airport_id in airport_ids[1:]:
+             close_airports = [v for v in close_airports if self.get_distance(airport_id, v) <= max_distance]
+         result = []
+         for i in close_airports:
+             result.append(self._vertices[i].name)
+         return result
 
 
 def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
@@ -300,8 +298,14 @@ if __name__ == "__main__":
     # airports_data = "data/airports_small.dat"
     # routes_data = "data/routes_small.dat"
 
-    airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
-    routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
+    #airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
+    #airports_data = "/Users/billychen/Downloads/coding/school-project/csc111p2-main/data/airports_small.dat"
+
+    #routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
+    #routes_data = "/Users/billychen/Downloads/coding/school-project/csc111p2-main/data/routes_small.dat"
+
+    airports_data = "data/airports_small.dat"
+    routes_data = "data/routes_small.dat"
 
     airports_df, routes_df = load_airport_and_route_data(
         airports_data, routes_data)
