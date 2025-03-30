@@ -1,5 +1,6 @@
 """Visualizer for our graph"""
 import plotly.graph_objects as go
+from typing import Any, Optional
 
 import plotly.io as plo
 import dash
@@ -198,13 +199,13 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000) -> None
         """docstring"""
         if ctx.triggered_id == 'submit-button-state':
             if len(clicked_node) == 0:
-                return 'please lick one airport'
+                return 'please click one airport'
 
             id_list = []
             result1 = []
             for i in clicked_node:
                 id_list.append(i['points'][0]['id'])
-            
+
             close_airport_ids = main.AirportsGraph.get_close_airports(
                     graph, id_list, int(max_distance))
             close_airport_names = [graph.get_vertex(airport).name for airport in close_airport_ids]

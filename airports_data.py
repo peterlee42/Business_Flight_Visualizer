@@ -1,6 +1,4 @@
-"""Data Handling File"""
-from unittest.mock import inplace
-
+"""Data Handling File for CSC111 Project 2"""
 import pandas as pd
 
 
@@ -14,8 +12,6 @@ def load_data(airports_data_path: str, routes_data_path: str, safety_index_path:
         - routess_data_path is a valid path to a valid routes dataset from OpenFlights
         - safety_index_path is a valid path to a valid safety index dataset from worldpopulationreview
     """
-    # "Airport ID", "Name", "City", "Country" "Latitude", "Longitude",
-    #                        "Altitude", "Timezone",
     # ----------Airports Data----------
     airport_columns = ["Airport ID", "Name", "City", "Country", "IATA", "ICAO", "Latitude", "Longitude",
                        "Altitude", "Timezone", "DST", "Tz database time zone", "Type", "Source"]
@@ -81,5 +77,4 @@ if __name__ == "__main__":
 
     my_airports_df, my_routes_df = load_data(airports_data, routes_data, safety_index_data)
 
-    print('Airports DataFrame Shape:\n', my_airports_df.shape)
-    print('Routes DataFrame Shape:\n', my_routes_df.shape)
+    print(my_airports_df.columns)
