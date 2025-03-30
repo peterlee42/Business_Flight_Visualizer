@@ -240,25 +240,21 @@ class AirportsGraph:
         Preconditions:
             - all({airport_id in self._vertices for airport_id in airport_ids})
         """
-        # Base Case
-        if max_distance <= 0:
-            return set()
-        else:
-            # Compute the neighbours that are at most max_distance far first.
-            curr_airport_vertex = self._vertices[airport_ids[0]]
+        # Compute the neighbours that are at most max_distance far first.
+        curr_airport_vertex = self._vertices[airport_ids[0]]
 
-            # Set comprehension to find all id of neighbours that are at most max_distance far
-            close_airports = {neighbour.id for neighbour in curr_airport_vertex.neighbours if
-                              curr_airport_vertex.neighbours[neighbour] <= max_distance}
+        # Set comprehension to find all id of neighbours that are at most max_distance far
+        close_airports = {neighbour.id for neighbour in curr_airport_vertex.neighbours if
+                          curr_airport_vertex.neighbours[neighbour] <= max_distance}
 
-            # Then we can find the intersection of all airports that are at most max_distance away from all airports.
-            for airport_id in airport_ids[1:]:
-                curr_airport_vertex = self._vertices[airport_id]
-                close_airports = close_airports.intersection(
-                    {neighbour.id for neighbour in curr_airport_vertex.neighbours if
-                     curr_airport_vertex.neighbours[neighbour] <= max_distance})
+        # Then we can find the intersection of all airports that are at most max_distance away from all airports.
+        for airport_id in airport_ids[1:]:
+            curr_airport_vertex = self._vertices[airport_id]
+            close_airports = close_airports.intersection(
+                {neighbour.id for neighbour in curr_airport_vertex.neighbours if
+                 curr_airport_vertex.neighbours[neighbour] <= max_distance})
 
-            return close_airports
+        return close_airports
 
     def rank_airports_degrees(self, airport_ids: list[int], max_out_size: int = 5) -> list[int]:
         """Rank the airports by their degree
