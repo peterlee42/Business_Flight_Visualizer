@@ -44,21 +44,24 @@ class _AirportVertex:
     - self.name != ''
     - self.altitude > 0
     - self.coordinates != tuple()
+    - self.safety_index >= 0
     """
     id: int
     name: str
     altitude: int
     coordinates: tuple[float, float]
     location: Location
+    safety_index: float = 0
     _adjacent: dict[int, float]
 
     def __init__(self, airport_id: int, airport_name: str, airport_altitude: int,
-                 airport_coordinates: tuple[float, float], airport_location: Location):
+                 airport_coordinates: tuple[float, float], airport_location: Location, safety_index: float) -> None:
         self.id = airport_id
         self.name = airport_name
         self.altitude = airport_altitude
         self.coordinates = airport_coordinates
         self.location = airport_location
+        self.safety_index = safety_index
         self._adjacent = {}
 
     def is_adjacent(self, other: _AirportVertex) -> bool:
@@ -101,11 +104,6 @@ class AirportsGraph:
     #     - _vertices:
     #         A collection of the vertices contained in this graph.
     #         Maps airport id to _Vertex object.
-    #     - _edges:
-    #         A list of edges in the graph
-    #     - _edge_indices:
-    #         A collection of the edge indices contained in this graph.
-    #         Maps vertex item (id) to edge index.
 
     _vertices: dict[Any, _AirportVertex]
 
@@ -195,27 +193,6 @@ class AirportsGraph:
 
         This code has been inspired by the method built in exercise3/exercise4
         """
-        # graph_nx = nx.Graph()
-        # for v in self._vertices.values():
-        #     graph_nx.add_node(
-        #         v.name, latitude=v.coordinates[0], longitude=v.coordinates[1])
-        #
-        #     for u in self.get_neighbours(v.id):
-        #         u_vertex = self._vertices[u]
-        #         if graph_nx.number_of_nodes() < max_vertices:
-        #             graph_nx.add_node(u_vertex.name, latitude=u_vertex.coordinates[0],
-        #                               longitude=u_vertex.coordinates[1])
-        #
-        #         if u_vertex.name in graph_nx.nodes:
-        #             ind1 = self._edge_indices[u_vertex.id]
-        #             ind2 = self._edge_indices[v.id]
-        #             distance = self._edges[ind1][ind2]
-        #             graph_nx.add_edge(v.name, u_vertex.name, weight=distance)
-        #
-        #     if graph_nx.number_of_nodes() >= max_vertices:
-        #         break
-        #
-        # return graph_nx
 
         graph_nx = nx.Graph()
         for v in self._vertices.values():
@@ -258,7 +235,6 @@ class AirportsGraph:
         return result
 
 
-# TODO: SAFETY INDEX
 def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
     """Given two pandas DataFrame objects airports and routes, build and return an airport graph using the data
 
@@ -277,7 +253,7 @@ def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
     for row in df1.itertuples(index=False):
         airport_id = row[0]  # This corresponds to 'Airport ID'
         current_item = _AirportVertex(airport_id, row[1], row[6], (row[4], row[5]),
-                                      Location(row[2], row[3], row[7]))
+                                      Location(row[2], row[3], row[7]), row[8])
         airports_graph.add_vertex(airport_id, current_item)
 
     # Create edges for routes using itertuples
@@ -316,7 +292,7 @@ if __name__ == "__main__":
 
     safety_data = "data/safest-countries-in-the-world-2025.csv"
 
-    airports_df, routes_df, safety_df = load_data(
+    airports_df, routes_df = load_data(
         airports_data, routes_data, safety_data)
 
     g = load_airports_graph(airports_df, routes_df)

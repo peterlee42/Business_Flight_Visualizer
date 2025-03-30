@@ -1,9 +1,11 @@
 """Data Handling File"""
+from unittest.mock import inplace
+
 import pandas as pd
 
 
 def load_data(airports_data_path: str, routes_data_path: str, safety_index_path: str) -> tuple[
-        pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        pd.DataFrame, pd.DataFrame]:
     """Given paths to a valid airport data, routes data and safety index data, load, clean, and filter the datasets and
     return a tuple of the respective DataFrame objects in the same order.
 
@@ -50,16 +52,22 @@ def load_data(airports_data_path: str, routes_data_path: str, safety_index_path:
     # ----------Safety Index Data----------
     safety_df = pd.read_csv(safety_index_path)
 
-    safety_df = safety_df.dropna()
+    safety_df.dropna(inplace=True)
+
+    safety_df.rename(columns={'country': 'Country'}, inplace=True)
 
     # ----------FILTER DATA SO THAT ONLY AIRPORTS IN ROUTES AND AIRPORTS WHOS COUNTRY IS IN SAFETY INDEX DATA WILL BE
     # IN AIRPORTS DATAFRAME----------
-    airports_df = airports_df[airports_df["Country"].isin(set(safety_df["country"]))]
+    airports_df = airports_df[airports_df["Country"].isin(set(safety_df["Country"]))]
 
     valid_airports = set(routes_df["Source airport ID"]).union(set(routes_df["Destination airport ID"]))
     airports_df = airports_df[airports_df["Airport ID"].isin(valid_airports)]
 
-    return airports_df, routes_df, safety_df
+    # ----------APPEND THE SAFETY INDICES FOR EACH AIRPORT----------
+    airports_df = airports_df.merge(safety_df[["Country", "MostPeaceful2024GPI"]], on="Country", how="left")
+    airports_df.rename(columns={"MostPeaceful2024GPI": "Safety Index"}, inplace=True)
+
+    return airports_df, routes_df
 
 
 if __name__ == "__main__":
@@ -71,8 +79,7 @@ if __name__ == "__main__":
 
     safety_index_data = "data/safest-countries-in-the-world-2025.csv"
 
-    my_airports_df, my_routes_df, my_safety_df = load_data(airports_data, routes_data, safety_index_data)
+    my_airports_df, my_routes_df = load_data(airports_data, routes_data, safety_index_data)
 
-    print('Airports DataFrame Shape: ', my_airports_df.shape)
-    print('Routes DataFrame Shape', my_routes_df.shape)
-    print('Safety Index DataFrame Shape', my_safety_df.shape)
+    print('Airports DataFrame Shape:\n', my_airports_df.shape)
+    print('Routes DataFrame Shape:\n', my_routes_df.shape)
