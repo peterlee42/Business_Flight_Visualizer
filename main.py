@@ -224,7 +224,7 @@ class AirportsGraph:
 
         return graph_nx
 
-    def get_close_airports(self, airport_ids: list[int], max_distance: int) -> set[int]:
+    def get_close_airports(self, airport_ids: list[int], max_distance: int, visited:set[int] = None) -> set[int]:
         """Return a set of airport ids that are adjacent to every airport in airport_ids within max_distance.
 
         Preconditions:
@@ -246,8 +246,8 @@ class AirportsGraph:
 
         return close_airports
 
-    def rank_airports_connections(self, airport_ids: set[int], max_out_size: int) -> list[int]:
-        """Rank the airports by their number of connections
+    def rank_airports_degrees(self, airport_ids: set[int], max_out_size: int = 5) -> list[int]:
+        """Rank the airports by their degree
 
         Preconditions:
             - all({airport_id in self._vertices for airport_id in airport_ids})
@@ -255,6 +255,47 @@ class AirportsGraph:
         # Rank the airports by their degree (number of connections)
         # and return the top max_out_size airports
         ranked_airports = sorted(airport_ids, key=lambda x: self._vertices[x].get_degree(), reverse=True)
+
+        return ranked_airports[:max_out_size]
+
+    def rank_airports_safety(self, airport_ids: set[int], max_out_size: int = 5) -> list[int]:
+        """Rank the airports by their safety index
+
+        Preconditions:
+            - all({airport_id in self._vertices for airport_id in airport_ids})
+        """
+        assert all({curr_id in self._vertices for curr_id in airport_ids})
+
+        # Rank the airports by their safety index
+        ranked_airports = sorted(airport_ids, key=lambda x: self._vertices[x].safety_index, reverse=True)
+
+        return ranked_airports[:max_out_size]
+
+    def rank_airports(self, airport_ids: set[int], max_out_size: int) -> list[int]:
+        """Rank the airports by their safety index and number of connections.
+        Group each airport by the ones in the same country and keep the ones with the highest connections.
+        Then, rank each country by their safety index, and finally rank by combining the two.
+
+        Preconditions:
+            - all({airport_id in self._vertices for airport_id in airport_ids})
+        """
+        assert all({curr_id in self._vertices for curr_id in airport_ids})
+
+        countries = {}
+        for airport_id in airport_ids:
+            airport = self._vertices[airport_id]
+            country = airport.item.country
+            if country not in countries:
+                countries[country] = []
+            countries[country].append(airport_id)
+
+        for country in countries:
+            countries[country] = self.rank_airports_degrees(countries[country], max_out_size)
+
+        # Rank the countries by their safety index and merge the lists together
+        ranked_airports = []
+        for country in sorted(countries, key=lambda x: self._vertices[countries[x][0]].safety_index, reverse=True):
+            ranked_airports += countries[country]
 
         return ranked_airports[:max_out_size]
 
@@ -298,11 +339,11 @@ def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
 
 if __name__ == "__main__":
     # import doctest
-    #
+
     # doctest.testmod()
-    #
+
     # import python_ta
-    #
+
     # python_ta.check_all(config={
     #     'extra-imports': ["pandas", "networkx", "visualizer", "math", "airports_data"],
     #     # the names (strs) of imported modules
