@@ -129,7 +129,7 @@ class AirportsGraph:
     def get_earth_distance(self, airport_id1: int, airport_id2: int) -> int:
         """Return the rounded integer distance (in kilometers) between the given two airports
 
-        Credits to Geeks4Geeks for .
+        Credits to Geeks4Geeks for inspiration.
         """
         airport1_coords = self._vertices[airport_id1].item.coordinates
         airport2_coords = self._vertices[airport_id2].item.coordinates
@@ -175,6 +175,10 @@ class AirportsGraph:
             return v1.neighbours.get(v2, 0)
         else:
             raise ValueError("No distance given between these two airports.")
+
+    def display_airport_names(self, airport_ids: list[int]) -> list[str]:
+        """Display the corresponding airport names given a list of airport ids"""
+        return [self._vertices[airport].item.name for airport in airport_ids]
 
     def __contains__(self, airport_id: int) -> bool:
         """Check if an airport is in the graph"""
@@ -224,29 +228,39 @@ class AirportsGraph:
 
         return graph_nx
 
-    def get_close_airports(self, airport_ids: list[int], max_distance: int, visited:set[int] = None) -> set[int]:
+    def get_neighour_within_dist(self, airport_id: int, max_distance: int) -> set:
+        """Get adjacent neighbours that are within max_distance"""
+        curr_airport_vertex = self._vertices[airport_id]
+        return {neighbour.id for neighbour in curr_airport_vertex.neighbours if
+                curr_airport_vertex.neighbours[neighbour] <= max_distance}
+
+    def get_close_airports(self, airport_ids: list[int], max_distance: int) -> set:
         """Return a set of airport ids that are adjacent to every airport in airport_ids within max_distance.
 
         Preconditions:
             - all({airport_id in self._vertices for airport_id in airport_ids})
         """
-        # Compute the neighbours that are at most max_distance far first.
-        curr_airport_vertex = self._vertices[airport_ids[0]]
+        # Base Case
+        if max_distance <= 0:
+            return set()
+        else:
+            # Compute the neighbours that are at most max_distance far first.
+            curr_airport_vertex = self._vertices[airport_ids[0]]
 
-        # Set comprehension to find all id of neighbours that are at most max_distance far
-        close_airports = {neighbour.id for neighbour in curr_airport_vertex.neighbours if
-                          curr_airport_vertex.neighbours[neighbour] <= max_distance}
+            # Set comprehension to find all id of neighbours that are at most max_distance far
+            close_airports = {neighbour.id for neighbour in curr_airport_vertex.neighbours if
+                              curr_airport_vertex.neighbours[neighbour] <= max_distance}
 
-        # Then we can find the intersection of all airports that are at most max_distance away from all airports.
-        for airport_id in airport_ids[1:]:
-            curr_airport_vertex = self._vertices[airport_id]
-            close_airports = close_airports.intersection(
-                {neighbour.id for neighbour in curr_airport_vertex.neighbours if
-                 curr_airport_vertex.neighbours[neighbour] <= max_distance})
+            # Then we can find the intersection of all airports that are at most max_distance away from all airports.
+            for airport_id in airport_ids[1:]:
+                curr_airport_vertex = self._vertices[airport_id]
+                close_airports = close_airports.intersection(
+                    {neighbour.id for neighbour in curr_airport_vertex.neighbours if
+                     curr_airport_vertex.neighbours[neighbour] <= max_distance})
 
-        return close_airports
+            return close_airports
 
-    def rank_airports_degrees(self, airport_ids: set[int], max_out_size: int = 5) -> list[int]:
+    def rank_airports_degrees(self, airport_ids: list[int], max_out_size: int = 5) -> list[int]:
         """Rank the airports by their degree
 
         Preconditions:
@@ -279,12 +293,10 @@ class AirportsGraph:
         Preconditions:
             - all({airport_id in self._vertices for airport_id in airport_ids})
         """
-        assert all({curr_id in self._vertices for curr_id in airport_ids})
-
         countries = {}
         for airport_id in airport_ids:
-            airport = self._vertices[airport_id]
-            country = airport.item.country
+            airport_vertex = self._vertices[airport_id]
+            country = airport_vertex.item.country
             if country not in countries:
                 countries[country] = []
             countries[country].append(airport_id)
@@ -328,10 +340,7 @@ def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
         destination_airport_id = row[5]
 
         # Ensure both airports exist in the airports dataframe
-        if (
-                source_airport_id in airports_graph
-                and destination_airport_id in airports_graph
-        ):
+        if source_airport_id in airports_graph and destination_airport_id in airports_graph:
             airports_graph.add_edge(source_airport_id, destination_airport_id)
 
     return airports_graph
@@ -353,19 +362,20 @@ if __name__ == "__main__":
 
     from visualizer import visualize_graph, visualize_graph_app
 
-    # airports_data = "data/airports_small.dat"
-    # routes_data = "data/routes_small.dat"
+    small_airports_data = "data/airports_small.dat"
+    small_routes_data = "data/routes_small.dat"
 
     airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
-    routes_data = (
-        "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
-    )
+    routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
 
     safety_data = "data/safest-countries-in-the-world-2025.csv"
 
+    # ----------Our visualizer app for small data----------
+    small_airports_df, small_routes_df = load_data(small_airports_data, small_routes_data, safety_data)
+    small_airports_graph = load_airports_graph(small_airports_df, small_routes_df)
+    visualize_graph_app(small_airports_graph)
+
+    # ----------Our heatmap visualizer for big data----------
     airports_df, routes_df = load_data(airports_data, routes_data, safety_data)
-
-    g = load_airports_graph(airports_df, routes_df)
-
-    visualize_graph(g)
-    # visualize_graph_app(g)
+    airports_graph_full = load_airports_graph(airports_df, routes_df)
+    visualize_graph(airports_graph_full)

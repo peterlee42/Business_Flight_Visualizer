@@ -6,7 +6,6 @@ from typing import Any
 import plotly.io as plo
 import dash
 from dash import dcc, html, Output, Input, ctx
-from networkx.algorithms.bipartite import color
 
 import main
 
@@ -220,9 +219,8 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                 graph, id_list, int(max_distance)
             )
             rank_airport_ids = main.AirportsGraph.rank_airports(graph, close_airport_ids, 5)
-            rank_airport_names = [
-                graph._vertices[airport].item.name for airport in rank_airport_ids
-            ]
+            rank_airport_names = graph.display_airport_names(rank_airport_ids)
+
             res = ", ".join(rank_airport_names)
             change_node_back()
             clicked_nodes_name.clear()
