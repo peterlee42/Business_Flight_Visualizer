@@ -205,7 +205,7 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
         prevent_initial_call=True,
     )
     def display_click(clickdata: Any, max_distance: Any, button_state: Any) -> tuple[str, go.Figure]:
-        """docstring"""
+        """display the change on webpage based on input"""
         if ctx.triggered_id == 'submit-button-state':
             if len(clicked_node) == 0:
                 return "please click one airport", fig
