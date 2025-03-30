@@ -11,7 +11,7 @@ import main
 plo.renderers.default = "browser"
 
 
-def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> None:
+def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 200) -> None:
     """Interactive Graph Visualizer"""
     graph_nx = graph.to_networkx(max_vertices)
 
@@ -312,7 +312,6 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):
         map={
             "center": {"lon": 10, "lat": 10},
             "style": "open-street-map",
-            "center": {"lon": -20, "lat": -20},
             "zoom": 1,
         },
         title="Airports Network Visualization",

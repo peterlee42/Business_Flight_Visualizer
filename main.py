@@ -224,7 +224,7 @@ class AirportsGraph:
 
         return graph_nx
 
-    def get_close_airports(self, airport_ids: list[int], max_distance: int) -> list[str]:
+    def get_close_airports(self, airport_ids: list[int], max_distance: int) -> set[int]:
         """Return a set of airport ids that are adjacent to every airport in airport_ids within max_distance.
 
         Preconditions:
@@ -328,7 +328,7 @@ if __name__ == "__main__":
     #     'max-line-length':` 120
     # })
 
-    from visualizer import visualize_graph
+    from visualizer import visualize_graph, visualize_graph_app
 
     # ai rports_data = "data/airports_small.dat"
     # routes_data = "data/routes_small.dat"
@@ -344,7 +344,8 @@ if __name__ == "__main__":
 
     g = load_airports_graph(airports_df, routes_df)
 
-    visualize_graph(g)
+    #visualize_graph(g)
+    visualize_graph_app(g)
 
     # Testing
     # print(g.get_neighbours(1))
