@@ -195,20 +195,19 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000) -> None
         Input('submit-button-state', 'n_clicks'),
         prevent_initial_call=True
     )
-    def display_click(clickdata: any, max_distance: any, button_state: any) -> tuple[str, go.Figure]:
+    def display_click(clickdata: Any, max_distance: Any, button_state: Any) -> tuple[str, go.Figure]:
         """docstring"""
         if ctx.triggered_id == 'submit-button-state':
             if len(clicked_node) == 0:
-                return 'please click one airport'
+                return 'please click one airport', fig
 
             id_list = []
-            result1 = []
             for i in clicked_node:
                 id_list.append(i['points'][0]['id'])
 
             close_airport_ids = main.AirportsGraph.get_close_airports(
                     graph, id_list, int(max_distance))
-            close_airport_names = [graph.get_vertex(airport).name for airport in close_airport_ids]
+            close_airport_names = [graph._vertices[airport].item.name for airport in close_airport_ids]
             res = ', '.join(close_airport_names)
             change_node_back()
             clicked_nodes_name.clear()
@@ -217,13 +216,13 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000) -> None
 
         elif ctx.triggered_id == 'world-graph':
             if not clickdata or 'points' not in clickdata:
-                return ""
+                return "", fig
 
             point = clickdata['points'][0]
             node_name = point['text']
 
             if node_name not in graph_nx.nodes:
-                return ""
+                return "", fig
 
             # Add clicked node to list
             clicked_nodes_name.append(node_name)
