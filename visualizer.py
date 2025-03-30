@@ -1,13 +1,14 @@
 """Visualizer for our graph"""
+
 import plotly.graph_objects as go
-from typing import Any, Optional
+from typing import Any
 
 import plotly.io as plo
 import dash
 from dash import dcc, html, Output, Input, ctx
 import main
 
-plo.renderers.default = 'browser'
+plo.renderers.default = "browser"
 
 
 def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> None:
@@ -16,9 +17,9 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
 
     node_traces = []
     for node in graph_nx.nodes:
-        lat1 = graph_nx.nodes[node]['latitude']
-        lon1 = graph_nx.nodes[node]['longitude']
-        id1 = graph_nx.nodes[node]['id']
+        lat1 = graph_nx.nodes[node]["latitude"]
+        lon1 = graph_nx.nodes[node]["longitude"]
+        id1 = graph_nx.nodes[node]["id"]
 
         node_trace = go.Scattermap(
             mode="markers",
@@ -26,8 +27,8 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
             lat=[lat1],
             text=[node],
             name="Airports",
-            marker={'size': 4, 'color': 'black'},
-            ids=[id1]
+            marker={"size": 4, "color": "black"},
+            ids=[id1],
         )
         node_traces.append(node_trace)
 
@@ -36,14 +37,20 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
     for edge in graph_nx.edges(data=True):
         node1 = edge[0]
         node2 = edge[1]
-        lat1, lon1 = graph_nx.nodes[node1]['latitude'], graph_nx.nodes[node1]['longitude']
-        lat2, lon2 = graph_nx.nodes[node2]['latitude'], graph_nx.nodes[node2]['longitude']
+        lat1, lon1 = (
+            graph_nx.nodes[node1]["latitude"],
+            graph_nx.nodes[node1]["longitude"],
+        )
+        lat2, lon2 = (
+            graph_nx.nodes[node2]["latitude"],
+            graph_nx.nodes[node2]["longitude"],
+        )
 
         edge_trace = go.Scattermap(
             mode="lines+text",
             lon=[lon1, lon2, None],
             lat=[lat1, lat2, None],
-            line={"width": 2, "color": 'rgba(0, 0, 0, 0.1)'},
+            line={"width": 2, "color": "rgba(0, 0, 0, 0.1)"},
         )
         edge_traces.append(edge_trace)
 
@@ -56,21 +63,21 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
             mode="text",
             lon=[mid_lon],
             lat=[mid_lat],
-            text=[str(edge[2]['weight']) + 'km'],
+            text=[str(edge[2]["weight"]) + "km"],
             textposition="middle center",
             showlegend=False,
-            textfont={"size": 8}
+            textfont={"size": 8},
         )
         text_traces.append(text_trace)
 
     fig = go.Figure(data=edge_traces + node_traces + text_traces)
     fig.update_layout(
-        margin={'l': 0, 't': 0, 'b': 0, 'r': 0},
+        margin={"l": 0, "t": 0, "b": 0, "r": 0},
         showlegend=False,
         map={
-            'center': {'lon': 10, 'lat': 10},
-            'style': "open-street-map",
-            'zoom': 1,
+            "center": {"lon": 10, "lat": 10},
+            "style": "open-street-map",
+            "zoom": 1,
         },
         title="Airports Network Visualization",
     )
@@ -82,7 +89,7 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                 pass
             else:
                 if node_name == fig.data[i].text[0]:
-                    fig.data[i].marker = {'size': 10, 'color': 'black'}
+                    fig.data[i].marker = {"size": 10, "color": "black"}
                     return fig
         return fig
 
@@ -92,7 +99,7 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
             if value in edge_traces or value in text_traces:
                 pass
             else:
-                fig.data[i].marker = {'size': 4, 'color': 'black'}
+                fig.data[i].marker = {"size": 4, "color": "black"}
         return fig
 
     # Dash App
@@ -100,142 +107,148 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
 
     app.layout = html.Div(
         style={
-            'backgroundColor': '#e0e1dd',
-            'fontFamily': 'Arial, sans-serif',
-            'padding': '20px'
+            "backgroundColor": "#e0e1dd",
+            "fontFamily": "Arial, sans-serif",
+            "padding": "20px",
         },
-        children=[html.Div([
-            html.H2(
-                "Business Travel Flight Visualizer",
-                style={'textAlign': 'center', 'color': '#0d1b2a'}
-            ),
-            dcc.Graph(
-                id='world-graph',
-                figure=fig,
-                style={
-                    'height': '60vh',
-                    'width': '100%',
-                    'border': '2px solid',
-                    'borderRadius': '5px',
-                    'max-width': '1000px'
-                }
-            ),
+        children=[
             html.Div(
                 [
-                    html.Label("Max Distance: ", style={
-                               'marginRight': '10px'}),
-                    dcc.Input(
-                        id='my-input',
-                        value='1000',
-                        type='text',
+                    html.H2(
+                        "Business Travel Flight Visualizer",
+                        style={"textAlign": "center", "color": "#0d1b2a"},
+                    ),
+                    dcc.Graph(
+                        id="world-graph",
+                        figure=fig,
                         style={
-                            'width': '150px',
-                            'padding': '5px',
-                            'border': '1px solid #ccc',
-                            'borderRadius': '3px'
-                        }
-                    )
+                            "height": "60vh",
+                            "width": "100%",
+                            "border": "2px solid",
+                            "borderRadius": "5px",
+                            "max-width": "1000px",
+                        },
+                    ),
+                    html.Div(
+                        [
+                            html.Label("Max Distance: ", style={"marginRight": "10px"}),
+                            dcc.Input(
+                                id="my-input",
+                                value="1000",
+                                type="text",
+                                style={
+                                    "width": "150px",
+                                    "padding": "5px",
+                                    "border": "1px solid #ccc",
+                                    "borderRadius": "3px",
+                                },
+                            ),
+                        ],
+                        style={
+                            "display": "flex",
+                            "alignItems": "center",
+                            "justifyContent": "center",
+                            "margin": "20px 0",
+                        },
+                    ),
+                    html.Div(
+                        "Output: ",
+                        style={
+                            "textAlign": "center",
+                            "marginBottom": "10px",
+                            "color": "#333",
+                            "fontWeight": "bold",
+                        },
+                    ),
+                    html.Button(
+                        id="submit-button-state",
+                        children="Submit",
+                        style={
+                            "display": "block",
+                            "margin": "0 auto",
+                            "padding": "10px 20px",
+                            "backgroundColor": "#007BFF",
+                            "color": "#fff",
+                            "border": "none",
+                            "borderRadius": "5px",
+                            "cursor": "pointer",
+                        },
+                    ),
+                    html.Div(
+                        id="output",
+                        style={
+                            "textAlign": "center",
+                            "marginTop": "10px",
+                            "fontSize": "16px",
+                            "color": "green",
+                        },
+                    ),
                 ],
                 style={
-                    'display': 'flex',
-                    'alignItems': 'center',
-                    'justifyContent': 'center',
-                    'margin': '20px 0'
-                }
-            ),
-            html.Div(
-                "Output: ",
-                style={
-                    'textAlign': 'center',
-                    'marginBottom': '10px',
-                    'color': '#333',
-                    'fontWeight': 'bold'
-                }
-            ),
-            html.Button(
-                id='submit-button-state',
-                children='Submit',
-                style={
-                    'display': 'block',
-                    'margin': '0 auto',
-                    'padding': '10px 20px',
-                    'backgroundColor': '#007BFF',
-                    'color': '#fff',
-                    'border': 'none',
-                    'borderRadius': '5px',
-                    'cursor': 'pointer'
-                }
-            ),
-            html.Div(
-                id='output',
-                style={
-                    'textAlign': 'center',
-                    'marginTop': '10px',
-                    'fontSize': '16px',
-                    'color': 'green'
-                }
+                    "display": "flex",
+                    "flex-direction": "column",
+                    "align-items": "center",
+                },
             )
         ],
-            style={
-                'display': 'flex',
-                'flex-direction': 'column',
-                'align-items': 'center'
-            }
-        )]
     )
 
     clicked_nodes_name = []
     clicked_node = []
 
     @app.callback(
-        Output('output', 'children'),
-        Output('world-graph', 'figure'),
-        Input('world-graph', 'clickData'),
-        Input('my-input', 'value'),
-        Input('submit-button-state', 'n_clicks'),
-        prevent_initial_call=True
+        Output("output", "children"),
+        Output("world-graph", "figure"),
+        Input("world-graph", "clickData"),
+        Input("my-input", "value"),
+        Input("submit-button-state", "n_clicks"),
+        prevent_initial_call=True,
     )
-    def display_click(clickdata: any, max_distance: any, button_state: any) -> tuple[str, go.Figure]:
+    def display_click(
+        clickdata: Any, max_distance: Any, button_state: Any
+    ) -> tuple[str, go.Figure]:
         """docstring"""
-        if ctx.triggered_id == 'submit-button-state':
+        if ctx.triggered_id == "submit-button-state":
             if len(clicked_node) == 0:
-                return 'please click one airport'
+                return "please click one airport", fig
 
             id_list = []
-            result1 = []
             for i in clicked_node:
-                id_list.append(i['points'][0]['id'])
+                id_list.append(i["points"][0]["id"])
 
             close_airport_ids = main.AirportsGraph.get_close_airports(
-                    graph, id_list, int(max_distance))
-            close_airport_names = [graph.get_vertex(airport).name for airport in close_airport_ids]
-            res = ', '.join(close_airport_names)
+                graph, id_list, int(max_distance)
+            )
+            close_airport_names = [
+                graph._vertices[airport].item.name for airport in close_airport_ids
+            ]
+            res = ", ".join(close_airport_names)
             change_node_back()
             clicked_nodes_name.clear()
             clicked_node.clear()
-            return f'The intersection airports include: {res}', fig
+            return f"The intersection airports include: {res}", fig
 
-        elif ctx.triggered_id == 'world-graph':
-            if not clickdata or 'points' not in clickdata:
-                return ""
+        elif ctx.triggered_id == "world-graph":
+            if not clickdata or "points" not in clickdata:
+                return "", fig
 
-            point = clickdata['points'][0]
-            node_name = point['text']
+            point = clickdata["points"][0]
+            node_name = point["text"]
 
             if node_name not in graph_nx.nodes:
-                return ""
+                return "", fig
 
             # Add clicked node to list
             clicked_nodes_name.append(node_name)
             clicked_node.append(clickdata)
             change_node_color(node_name)
-            result = ', '.join(clicked_nodes_name)
+            result = ", ".join(clicked_nodes_name)
 
-            return f'Selected node: {result}', fig
+            return f"Selected node: {result}", fig
 
-        elif ctx.triggered_id == 'my-input':
-            result = ', '.join(clicked_nodes_name)
-            return f'Selected node: {result}', fig
+        elif ctx.triggered_id == "my-input":
+            result = ", ".join(clicked_nodes_name)
+            return f"Selected node: {result}", fig
 
         return "", fig
 
@@ -251,8 +264,8 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):
     node_names = []
 
     for node in graph_nx.nodes:
-        lat = graph_nx.nodes[node]['latitude']
-        lon = graph_nx.nodes[node]['longitude']
+        lat = graph_nx.nodes[node]["latitude"]
+        lon = graph_nx.nodes[node]["longitude"]
         latitudes.append(lat)
         longitudes.append(lon)
         node_names.append(node)
@@ -261,39 +274,49 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):
     edge_lats = []
     for edge in graph_nx.edges(data=True):
         node1, node2 = edge[0], edge[1]
-        lat1, lon1 = graph_nx.nodes[node1]['latitude'], graph_nx.nodes[node1]['longitude']
-        lat2, lon2 = graph_nx.nodes[node2]['latitude'], graph_nx.nodes[node2]['longitude']
+        lat1, lon1 = (
+            graph_nx.nodes[node1]["latitude"],
+            graph_nx.nodes[node1]["longitude"],
+        )
+        lat2, lon2 = (
+            graph_nx.nodes[node2]["latitude"],
+            graph_nx.nodes[node2]["longitude"],
+        )
         # None separates the line segments
         edge_lats.extend([lat1, lat2, None])
         edge_lons.extend([lon1, lon2, None])
 
-    fig = go.Figure(go.Scattermap(
-        mode="lines",
-        lon=edge_lons,
-        lat=edge_lats,
-        line={'color': '#76c893', 'width': 2},
-        name='Airport Connections',
-        opacity=0.2,
-    ))
+    fig = go.Figure(
+        go.Scattermap(
+            mode="lines",
+            lon=edge_lons,
+            lat=edge_lats,
+            line={"color": "#76c893", "width": 2},
+            name="Airport Connections",
+            opacity=0.2,
+        )
+    )
 
-    fig.add_trace(go.Scattermap(
-        mode="markers",
-        lon=longitudes,
-        lat=latitudes,
-        text=node_names,
-        name='Airports',
-        marker={'size': 6, 'color': 'black'},
-        opacity=0.6
-    ))
+    fig.add_trace(
+        go.Scattermap(
+            mode="markers",
+            lon=longitudes,
+            lat=latitudes,
+            text=node_names,
+            name="Airports",
+            marker={"size": 6, "color": "black"},
+            opacity=0.6,
+        )
+    )
 
     fig.update_layout(
-        margin={'l': 0, 't': 0, 'b': 0, 'r': 0},
+        margin={"l": 0, "t": 0, "b": 0, "r": 0},
         map={
-            'center': {'lon': 10, 'lat': 10},
-            'style': "open-street-map",
-            'center': {'lon': -20, 'lat': -20},
-            'zoom': 1,
+            "center": {"lon": 10, "lat": 10},
+            "style": "open-street-map",
+            "center": {"lon": -20, "lat": -20},
+            "zoom": 1,
         },
-        title="Airports Network Visualization"
+        title="Airports Network Visualization",
     )
     fig.show()

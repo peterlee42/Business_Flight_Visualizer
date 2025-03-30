@@ -145,9 +145,9 @@ class AirportsGraph:
 
         return int(round(c * r, 0))
 
-    def is_connected(self, source_id: int, destination_id: int, visited: set[int] = None) -> bool:
+    def is_connected(self, source_id: int, destination_id: int, visited: set[int] = set()) -> bool:
         """Check if two vertices are connected"""
-        if visited is None:
+        if visited is set():
             visited = set()
 
         if source_id == destination_id:
@@ -211,8 +211,13 @@ class AirportsGraph:
 
         return graph_nx
 
+<<<<<<< HEAD
     def get_close_airports(self, airport_ids: list[int], max_distance: int) -> list[str]:
         """Return a set of airport ids that are adjacent to every airport in airport_ids within max_distance.
+=======
+    def get_close_airports(self, airport_ids: list[int], max_distance: int) -> set[int]:
+        """Return a set of airport ids within max_distance from the given airport ids\
+>>>>>>> 9ecebb1f89a2dc52cf5d499a4acf9ba14d940683
 
         Preconditions:
             - all({airport_id in self._vertices for airport_id in airport_ids})
