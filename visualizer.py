@@ -6,6 +6,8 @@ from typing import Any
 import plotly.io as plo
 import dash
 from dash import dcc, html, Output, Input, ctx
+from networkx.algorithms.bipartite import color
+
 import main
 
 plo.renderers.default = "browser"
@@ -261,6 +263,7 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):
     latitudes = []
     longitudes = []
     node_names = []
+    degrees = []
 
     for node in graph_nx.nodes:
         lat = graph_nx.nodes[node]["latitude"]
@@ -268,6 +271,7 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):
         latitudes.append(lat)
         longitudes.append(lon)
         node_names.append(node)
+        degrees.append(graph_nx.degree(node))
 
     edge_lons = []
     edge_lats = []
@@ -296,6 +300,8 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):
         )
     )
 
+    colour_scale = [[0, "blue"], [1, "red"]]
+
     fig.add_trace(
         go.Scattermap(
             mode="markers",
@@ -303,13 +309,22 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):
             lat=latitudes,
             text=node_names,
             name="Airports",
-            marker={"size": 6, "color": "black"},
-            opacity=0.6,
+            marker={"size": 6,
+                    "color": degrees,
+                    "colorscale": colour_scale,
+                    "colorbar": {
+                        "title": "Number of Neighbours",
+                        "xanchor": "left",
+                        "yanchor": "middle",
+                        "len": 0.5,
+                        "thickness": 10,
+                    }
+                    }
         )
     )
 
     fig.update_layout(
-        margin={"l": 0, "t": 0, "b": 0, "r": 0},
+        margin={"l": 0, "t": 30, "b": 0, "r": 0},
         map={
             "center": {"lon": 10, "lat": 10},
             "style": "open-street-map",

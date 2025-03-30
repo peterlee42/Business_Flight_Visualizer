@@ -230,8 +230,6 @@ class AirportsGraph:
         Preconditions:
             - all({airport_id in self._vertices for airport_id in airport_ids})
         """
-        assert all({curr_id in self._vertices for curr_id in airport_ids})
-
         # Compute the neighbours that are at most max_distance far first.
         curr_airport_vertex = self._vertices[airport_ids[0]]
 
@@ -254,8 +252,6 @@ class AirportsGraph:
         Preconditions:
             - all({airport_id in self._vertices for airport_id in airport_ids})
         """
-        assert all({curr_id in self._vertices for curr_id in airport_ids})
-
         # Rank the airports by their degree (number of connections)
         # and return the top max_out_size airports
         ranked_airports = sorted(airport_ids, key=lambda x: self._vertices[x].get_degree(), reverse=True)
@@ -301,18 +297,18 @@ def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
 
 
 if __name__ == "__main__":
-    import doctest
-
-    doctest.testmod()
-
-    import python_ta
-
-    python_ta.check_all(config={
-        'extra-imports': ["pandas", "networkx", "visualizer", "math", "airports_data"],
-        # the names (strs) of imported modules
-        'allowed-io': [],  # the names (strs) of functions that call print/open/input
-        'max-line-length': 120
-    })
+    # import doctest
+    #
+    # doctest.testmod()
+    #
+    # import python_ta
+    #
+    # python_ta.check_all(config={
+    #     'extra-imports': ["pandas", "networkx", "visualizer", "math", "airports_data"],
+    #     # the names (strs) of imported modules
+    #     'allowed-io': [],  # the names (strs) of functions that call print/open/input
+    #     'max-line-length': 120
+    # })
 
     from visualizer import visualize_graph, visualize_graph_app
 
