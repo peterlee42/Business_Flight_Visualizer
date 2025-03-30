@@ -211,8 +211,13 @@ class AirportsGraph:
 
         return graph_nx
 
+<<<<<<< HEAD
+    def get_close_airports(self, airport_ids: list[int], max_distance: int) -> list[str]:
+        """Return a set of airport ids that are adjacent to every airport in airport_ids within max_distance.
+=======
     def get_close_airports(self, airport_ids: list[int], max_distance: int) -> set[int]:
         """Return a set of airport ids within max_distance from the given airport ids\
+>>>>>>> 9ecebb1f89a2dc52cf5d499a4acf9ba14d940683
 
         Preconditions:
             - all({airport_id in self._vertices for airport_id in airport_ids})
@@ -235,18 +240,25 @@ class AirportsGraph:
 
         return close_airports
 
-    def rank_airports(self, airport_ids: set[int], max_out_size: int) -> list[int]:
-        """Rank the airports by their number of connections"""
-        # Input check
-        for airport_id in airport_ids:
-            if airport_id not in self._vertices:
-                raise KeyError("Airport ID not found in the graph.")
+    def rank_airports_connections(self, airport_ids: set[int], max_out_size: int) -> list[int]:
+        """Rank the airports by their number of connections
+
+        Preconditions:
+            - all({airport_id in self._vertices for airport_id in airport_ids})
+        """
+        assert all({airport_id in self._vertices for airport_id in airport_ids})
 
         # Rank the airports by their degree (number of connections)
         # and return the top max_out_size airports
         ranked_airports = sorted(airport_ids, key=lambda x: self._vertices[x].get_degree(), reverse=True)
 
         return ranked_airports[:max_out_size]
+
+    # def recommend_airports(self, airport_ids: list[int]) -> list:
+    #     """Recommend airports for international meetings
+    #
+    #     """
+    #
 
 
 def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
@@ -298,11 +310,11 @@ if __name__ == "__main__":
 
     from visualizer import visualize_graph
 
-    airports_data = "data/airports_small.dat"
-    routes_data = "data/routes_small.dat"
+    # ai rports_data = "data/airports_small.dat"
+    # routes_data = "data/routes_small.dat"
 
-    # airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
-    # routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
+    airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
+    routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
 
     safety_data = "data/safest-countries-in-the-world-2025.csv"
 
@@ -310,7 +322,7 @@ if __name__ == "__main__":
 
     g = load_airports_graph(airports_df, routes_df)
 
-    visualize_graph(g, 50)
+    visualize_graph(g)
 
     # Testing
     # print(g.get_neighbours(1))

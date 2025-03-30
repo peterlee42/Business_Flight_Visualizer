@@ -77,4 +77,4 @@ if __name__ == "__main__":
 
     my_airports_df, my_routes_df = load_data(airports_data, routes_data, safety_index_data)
 
-    print(my_airports_df.columns)
+    print(my_airports_df.shape)

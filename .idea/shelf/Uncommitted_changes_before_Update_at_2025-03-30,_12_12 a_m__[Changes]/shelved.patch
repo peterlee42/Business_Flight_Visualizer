@@ -1,0 +1,444 @@
+Index: main.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>\"\"\"Our graph ADT\"\"\"\nfrom __future__ import annotations\nfrom typing import Any, Optional\nfrom dataclasses import dataclass\nfrom math import radians, cos, sin, asin, sqrt\n\nimport pandas as pd\n\nfrom airports_data import load_data\nimport networkx as nx\n\n\n@dataclass\nclass Location:\n    \"\"\"A location, showing the city, country, and timezone\n\n    Instance Attributes:\n        - city: The city of the location\n        - country: The country for the location\n        - timezone: The timezone for the location\n\n    Representation Invariants:\n        - self.city != ''\n        - self.country != ''\n        - self.timezone != ''\n    \"\"\"\n    city: str\n    country: str\n    timezone: str\n\n\nclass _AirportVertex:\n    \"\"\"Airport Vertex Class\n\n    Instance Attributes:\n    - id: The OpenFlights id of an airport\n    - name: The name of an airport\n    - altitude: The altitude of an airport\n    - coordinates: The coordinates of an airport on map using longitude and latitude\n    - location: The location of an airport\n\n    Representation Invariants:\n    - self.id >= 0\n    - self.name != ''\n    - self.altitude > 0\n    - self.coordinates != tuple()\n    \"\"\"\n    id: int\n    name: str\n    altitude: int\n    coordinates: tuple[float, float]\n    location: Location\n\n    def __init__(self, airport_id: int, airport_name: str, airport_altitude: int,\n                 airport_coordinates: tuple[float, float], airport_location: Location):\n        self.id = airport_id\n        self.name = airport_name\n        self.altitude = airport_altitude\n        self.coordinates = airport_coordinates\n        self.location = airport_location\n\n\n# TODO: ADD IMPLEMENTATION FOR WEIGHTED VERTICES BASED ON SAFETY INDEX!!!\nclass AirportsGraph:\n    \"\"\"A weighted graph used to represent airport connections and the distances of the distance of each route\"\"\"\n\n    # Private Instance Attributes:\n    #     - _vertices:\n    #         A collection of the vertices contained in this graph.\n    #         Maps airport id to _Vertex object.\n    #     - _edges:\n    #         A list of edges in the graph\n    #     - _edge_indices:\n    #         A collection of the edge indices contained in this graph.\n    #         Maps vertex item (id) to edge index.\n\n    _vertices: dict[Any, _AirportVertex]\n    _edges: list[list[int]]\n    _edge_indices: dict[Any, int]\n\n    def __init__(self):\n        self._vertices = {}\n        self._edges = []\n        self._edge_indices = {}\n\n        # TODO: Fix implementation (maybe do one like EX4)\n\n    def add_vertex(self, airport_id: int, item: _AirportVertex) -> None:\n        \"\"\"Add an airport to the graph using its id\"\"\"\n        if airport_id not in self._vertices:\n            self._vertices[airport_id] = item\n\n            # add new row of zeroes to make this a nxn matrix\n            for row in self._edges:\n                row.append(0)\n            # add another column of zeroes\n            self._edges.append([0] * (len(self._edges) + 1))\n            self._edge_indices[airport_id] = len(self._edge_indices) - 1\n\n    def add_edge(self, source_id: int, destination_id: int) -> None:\n        \"\"\"Add an edge to the graph\"\"\"\n        if source_id in self._vertices and destination_id in self._vertices:\n            src_id_index = self._edge_indices[source_id]\n            dest_id_index = self._edge_indices[destination_id]\n\n            # case if edge already made from other side to improve speed. we assume 0 means edge does not exist.\n            if self._edges[src_id_index][dest_id_index] != 0:\n                return\n            else:\n                distance = self.get_distance(source_id, destination_id)\n\n                self._edges[src_id_index][dest_id_index] = distance\n                self._edges[dest_id_index][src_id_index] = distance\n\n        else:\n            raise KeyError(\n                \"Source ID or Destination ID do not exist in this graph.\")\n\n    def get_vertex(self, airport_id: int) -> Optional[_AirportVertex]:\n        \"\"\"Get a vertex from the graph\"\"\"\n        return self._vertices.get(airport_id)\n\n    def get_neighbours(self, airport_id: int) -> set:\n        \"\"\"Return a set of all neighbours ids of the given airport id\"\"\"\n\n        if airport_id not in self._vertices:\n            raise ValueError\n        else:\n            airport_index = self._edge_indices[airport_id]\n            neighbours = set()\n\n            for i, weight in enumerate(self._edges[airport_index]):\n                if weight != 0:\n                    for other_airport_id, other_index in self._edge_indices.items():\n                        if other_index == i:\n                            neighbours.add(other_airport_id)\n\n            return neighbours\n\n    def get_edges(self) -> list[list[int]]:\n        \"\"\"Get all the edges in the graph. This will return a matrix of edge weights.\"\"\"\n        return self._edges\n\n    def get_distance(self, airport_id1: int, airport_id2: int) -> int:\n        \"\"\"Return the rounded integer distance (in kilometers) between the given two airports\"\"\"\n        airport1_coords = self._vertices[airport_id1].coordinates\n        airport2_coords = self._vertices[airport_id2].coordinates\n\n        lat1 = radians(airport1_coords[0])\n        lat2 = radians(airport2_coords[0])\n        long1 = radians(airport1_coords[1])\n        long2 = radians(airport2_coords[1])\n\n        # Reversine formula given by Geeks4Geeks\n        dlon = long2 - long1\n        dlat = lat2 - lat1\n        a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2\n\n        c = 2 * asin(sqrt(a))\n        r = 6371\n\n        return int(round(c * r, 0))\n\n    def is_adjacent(self, source_id: int, destination_id: int) -> bool:\n        \"\"\"Check if two vertices are adjacent\"\"\"\n        src_id_index = self._edge_indices[source_id]\n        dest_id_index = self._edge_indices[destination_id]\n\n        return self._edges[src_id_index][dest_id_index] != 0\n\n    def is_connected(self, source_id: int, destination_id: int, visited: set[int] = None) -> bool:\n        \"\"\"Check if two vertices are connected\"\"\"\n        if visited is None:\n            visited = set()\n\n        if source_id == destination_id:\n            return True\n\n        visited.add(source_id)\n\n        for neighbour in self.get_neighbours(source_id):\n            if neighbour not in visited:\n                if self.is_connected(neighbour, destination_id, visited):\n                    return True\n\n        return False\n\n    def __contains__(self, airport_id: int) -> bool:\n        \"\"\"Check if an airport is in the graph\"\"\"\n        return airport_id in self._vertices\n\n    def __iter__(self):\n        \"\"\"Iterate through the airport objects\"\"\"\n        return iter(self._vertices.values())\n\n    def __len__(self):\n        \"\"\"Get the number of vertices in the graph\"\"\"\n        return len(self._vertices)\n\n    def to_networkx(self, max_vertices: int = 100) -> nx.Graph:\n        \"\"\"Convert this graph into a networkx Graph.\n\n        max_vertices specifies the maximum number of vertices that can appear in the graph.\n        (This is necessary to limit the visualization output for large graphs.)\n        \"\"\"\n        graph_nx = nx.Graph()\n        for v in self._vertices.values():\n            graph_nx.add_node(\n                v.name, latitude=v.coordinates[0], longitude=v.coordinates[1])\n\n            for u in self.get_neighbours(v.id):\n                u_vertex = self._vertices[u]\n                if graph_nx.number_of_nodes() < max_vertices:\n                    graph_nx.add_node(u_vertex.name, latitude=u_vertex.coordinates[0],\n                                      longitude=u_vertex.coordinates[1])\n\n                if u_vertex.name in graph_nx.nodes:\n                    ind1 = self._edge_indices[u_vertex.id]\n                    ind2 = self._edge_indices[v.id]\n                    distance = self._edges[ind1][ind2]\n                    graph_nx.add_edge(v.name, u_vertex.name, weight=distance)\n\n            if graph_nx.number_of_nodes() >= max_vertices:\n                break\n\n        return graph_nx\n\n    def get_close_airports(self, airport_ids: list[int], max_distance: int) -> list[int]:\n        \"\"\"Get a dictionary of airports within max_distance from the given airport ids\"\"\"\n        # List check\n        for airport_id in airport_ids:\n            if airport_id not in self._vertices:\n                raise KeyError(\n                    f\"Airport ID {airport_id} not found in the graph.\")\n\n        close_airports = [v for v in self.get_neighbours(\n            airport_ids[0]) if self.get_distance(airport_ids[0], v) <= max_distance]\n        for airport_id in airport_ids[1:]:\n            close_airports = [v for v in close_airports if self.get_distance(\n                airport_id, v) <= max_distance]\n        return close_airports\n\n\n# TODO: SAFETY INDEX\ndef load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:\n    \"\"\"Given two pandas DataFrame objects airports and routes, build and return an airport graph using the data\n\n    Preconditions:\n    - df1 is a valid airports dataframe\n    - df2 is a valid routes dataframe with the routes between airports that exist in df1\n\n    Note:\n        Our implementation may look a bit unorganized due to indexing the rows, but this is a faster alternative to\n        iterating through dataframe objects.\n    \"\"\"\n\n    airports_graph = AirportsGraph()\n\n    # Create vertices using itertuples instead of to_dict\n    for row in df1.itertuples(index=False):\n        airport_id = row[0]  # This corresponds to 'Airport ID'\n        current_item = _AirportVertex(airport_id, row[1], row[6], (row[4], row[5]),\n                                      Location(row[2], row[3], row[7]))\n        airports_graph.add_vertex(airport_id, current_item)\n\n    # Create edges for routes using itertuples\n    for row in df2.itertuples(index=False):\n        source_airport_id = row[3]  # This corresponds to 'Source airport ID'\n        # This corresponds to 'Destination airport ID'\n        destination_airport_id = row[5]\n\n        # Ensure both airports exist in the airports dataframe\n        if source_airport_id in airports_graph and destination_airport_id in airports_graph:\n            airports_graph.add_edge(source_airport_id, destination_airport_id)\n\n    return airports_graph\n\n\nif __name__ == \"__main__\":\n    # import doctest\n\n    # doctest.testmod()\n\n    # import python_ta\n    #\n    # python_ta.check_all(config={\n    #     'extra-imports': [\"pandas\", \"networkx\", \"visualizer\"],  # the names (strs) of imported modules\n    #     'allowed-io': [],  # the names (strs) of functions that call print/open/input\n    #     'max-line-length':` 120\n    # })\n\n    from visualizer import visualize_graph\n\n    # airports_data = \"data/airports_small.dat\"\n    # routes_data = \"data/routes_small.dat\"\n\n    airports_data = \"https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat\"\n    routes_data = \"https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat\"\n\n    safety_data = \"data/safest-countries-in-the-world-2025.csv\"\n\n    airports_df, routes_df, safety_df = load_data(\n        airports_data, routes_data, safety_data)\n\n    g = load_airports_graph(airports_df, routes_df)\n\n    visualize_graph(g)\n\n    # Testing\n    # print(g.get_neighbours(1))\n\n    # print(g.is_connected(1, 2))\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/main.py b/main.py
+--- a/main.py	(revision 250ae94af36f5aa97b0c398d06438a6515ebf1b4)
++++ b/main.py	(date 1743307841054)
+@@ -33,6 +33,22 @@
+     """Airport Vertex Class
+ 
+     Instance Attributes:
++    - id: int
++        The airport id
++    - name: str
++        The airport name
++    - iata: str
++        The airport IATA code
++    - icao: str
++        The airport ICAO code
++    - altitude: int
++        The airport altitude
++    - coordinates: tuple[float, float]
++        The airport coordinates (latitude, longitude)
++    - location: Location
++        The airport location (city, country, timezone)
++    - _adjacent: dict[Any, float]
++        The adjacent airports and their distances, maps airport id to weight (distance)
+     - id: The OpenFlights id of an airport
+     - name: The name of an airport
+     - altitude: The altitude of an airport
+@@ -50,6 +66,7 @@
+     altitude: int
+     coordinates: tuple[float, float]
+     location: Location
++    _adjacent: dict[int, float]
+ 
+     def __init__(self, airport_id: int, airport_name: str, airport_altitude: int,
+                  airport_coordinates: tuple[float, float], airport_location: Location):
+@@ -58,6 +75,39 @@
+         self.altitude = airport_altitude
+         self.coordinates = airport_coordinates
+         self.location = airport_location
++        self._adjacent = {}
++
++    def is_adjacent(self, other: _AirportVertex) -> bool:
++        """Check if this vertex is adjacent to another vertex"""
++        if self.id == other.id:
++            return False
++        elif self._adjacent.get(other.id) is not None and other._adjacent.get(self.id) is not None:
++            return True
++        else:
++            return False
++
++    def get_neighbours(self) -> set[int]:
++        """Return the airport id of neighbours of this vertex"""
++        return set(self._adjacent.keys())
++
++    def get_distance(self, other: _AirportVertex) -> float:
++        """Return the distance between this vertex and another vertex"""
++        if self.id == other.id:
++            return 0.0
++        elif self._adjacent.get(other.id) is not None:
++            return self._adjacent[other.id]
++        else:
++            raise ValueError("No distance given between these two airports.")
++        
++    def add_adjacent(self, other: _AirportVertex, distance: float) -> None:
++        """Add an adjacent airport and its distance to this vertex. Since the graph is not oriented, we also add the reverse edge."""
++        if self.id == other.id:
++            raise ValueError("Cannot add an airport to itself.")
++        elif other.id in self._adjacent or self.id in other._adjacent:
++            raise ValueError("Airport already exists in the adjacent list.")
++        else:
++            self._adjacent[other.id] = distance
++            other._adjacent[self.id] = distance
+ 
+ 
+ # TODO: ADD IMPLEMENTATION FOR WEIGHTED VERTICES BASED ON SAFETY INDEX!!!
+@@ -75,73 +125,35 @@
+     #         Maps vertex item (id) to edge index.
+ 
+     _vertices: dict[Any, _AirportVertex]
+-    _edges: list[list[int]]
+-    _edge_indices: dict[Any, int]
+ 
+     def __init__(self):
+         self._vertices = {}
+-        self._edges = []
+-        self._edge_indices = {}
+-
+-        # TODO: Fix implementation (maybe do one like EX4)
+ 
+     def add_vertex(self, airport_id: int, item: _AirportVertex) -> None:
+-        """Add an airport to the graph using its id"""
++        """Add an airport to the graph, mapping the airport id to the vertex object"""
+         if airport_id not in self._vertices:
+             self._vertices[airport_id] = item
+ 
+-            # add new row of zeroes to make this a nxn matrix
+-            for row in self._edges:
+-                row.append(0)
+-            # add another column of zeroes
+-            self._edges.append([0] * (len(self._edges) + 1))
+-            self._edge_indices[airport_id] = len(self._edge_indices) - 1
+-
+     def add_edge(self, source_id: int, destination_id: int) -> None:
+         """Add an edge to the graph"""
+         if source_id in self._vertices and destination_id in self._vertices:
+-            src_id_index = self._edge_indices[source_id]
+-            dest_id_index = self._edge_indices[destination_id]
+-
++            source_vertex = self.get_vertex(source_id)
++            destination_vertex = self.get_vertex(destination_id)
+             # case if edge already made from other side to improve speed. we assume 0 means edge does not exist.
+-            if self._edges[src_id_index][dest_id_index] != 0:
+-                return
++            if source_vertex.is_adjacent(destination_vertex):
++                raise ValueError("Edge already exists between these two airports.")
+             else:
+-                distance = self.get_distance(source_id, destination_id)
++                distance = self.get_earth_distance(source_id, destination_id)
+ 
+-                self._edges[src_id_index][dest_id_index] = distance
+-                self._edges[dest_id_index][src_id_index] = distance
+-
++                source_vertex.add_adjacent(destination_vertex, distance)  # Will add the reverse edge as well
+         else:
+-            raise KeyError(
+-                "Source ID or Destination ID do not exist in this graph.")
++            raise KeyError("Source ID or Destination ID do not exist in this graph.")
+ 
+     def get_vertex(self, airport_id: int) -> Optional[_AirportVertex]:
+-        """Get a vertex from the graph"""
++        """Return a vertex object from its id"""
+         return self._vertices.get(airport_id)
+ 
+-    def get_neighbours(self, airport_id: int) -> set:
+-        """Return a set of all neighbours ids of the given airport id"""
+-
+-        if airport_id not in self._vertices:
+-            raise ValueError
+-        else:
+-            airport_index = self._edge_indices[airport_id]
+-            neighbours = set()
+-
+-            for i, weight in enumerate(self._edges[airport_index]):
+-                if weight != 0:
+-                    for other_airport_id, other_index in self._edge_indices.items():
+-                        if other_index == i:
+-                            neighbours.add(other_airport_id)
+-
+-            return neighbours
+-
+-    def get_edges(self) -> list[list[int]]:
+-        """Get all the edges in the graph. This will return a matrix of edge weights."""
+-        return self._edges
+-
+-    def get_distance(self, airport_id1: int, airport_id2: int) -> int:
++    def get_earth_distance(self, airport_id1: int, airport_id2: int) -> int:
+         """Return the rounded integer distance (in kilometers) between the given two airports"""
+         airport1_coords = self._vertices[airport_id1].coordinates
+         airport2_coords = self._vertices[airport_id2].coordinates
+@@ -161,13 +173,6 @@
+ 
+         return int(round(c * r, 0))
+ 
+-    def is_adjacent(self, source_id: int, destination_id: int) -> bool:
+-        """Check if two vertices are adjacent"""
+-        src_id_index = self._edge_indices[source_id]
+-        dest_id_index = self._edge_indices[destination_id]
+-
+-        return self._edges[src_id_index][dest_id_index] != 0
+-
+     def is_connected(self, source_id: int, destination_id: int, visited: set[int] = None) -> bool:
+         """Check if two vertices are connected"""
+         if visited is None:
+@@ -178,7 +183,7 @@
+ 
+         visited.add(source_id)
+ 
+-        for neighbour in self.get_neighbours(source_id):
++        for neighbour in self.get_vertex(source_id).get_neighbours():
+             if neighbour not in visited:
+                 if self.is_connected(neighbour, destination_id, visited):
+                     return True
+@@ -206,19 +211,16 @@
+         graph_nx = nx.Graph()
+         for v in self._vertices.values():
+             graph_nx.add_node(
+-                v.name, latitude=v.coordinates[0], longitude=v.coordinates[1])
++                v.name, latitude=v.coordinates[0], longitude=v.coordinates[1], id = v.id)
+ 
+-            for u in self.get_neighbours(v.id):
++            for u in v.get_neighbours():
+                 u_vertex = self._vertices[u]
+                 if graph_nx.number_of_nodes() < max_vertices:
+                     graph_nx.add_node(u_vertex.name, latitude=u_vertex.coordinates[0],
+-                                      longitude=u_vertex.coordinates[1])
++                                      longitude=u_vertex.coordinates[1], id = u_vertex.id)
+ 
+                 if u_vertex.name in graph_nx.nodes:
+-                    ind1 = self._edge_indices[u_vertex.id]
+-                    ind2 = self._edge_indices[v.id]
+-                    distance = self._edges[ind1][ind2]
+-                    graph_nx.add_edge(v.name, u_vertex.name, weight=distance)
++                    graph_nx.add_edge(v.name, u_vertex.name)
+ 
+             if graph_nx.number_of_nodes() >= max_vertices:
+                 break
+@@ -230,14 +232,11 @@
+         # List check
+         for airport_id in airport_ids:
+             if airport_id not in self._vertices:
+-                raise KeyError(
+-                    f"Airport ID {airport_id} not found in the graph.")
++                raise KeyError(f"Airport ID {airport_id} not found in the graph.")
+ 
+-        close_airports = [v for v in self.get_neighbours(
+-            airport_ids[0]) if self.get_distance(airport_ids[0], v) <= max_distance]
++        close_airports = [v for v in self.get_neighbours(airport_ids[0]) if self.get_distance(airport_ids[0], v) <= max_distance]
+         for airport_id in airport_ids[1:]:
+-            close_airports = [v for v in close_airports if self.get_distance(
+-                airport_id, v) <= max_distance]
++            close_airports = [v for v in close_airports if self.get_distance(airport_id, v) <= max_distance]
+         return close_airports
+ 
+ 
+@@ -309,4 +308,4 @@
+     # Testing
+     # print(g.get_neighbours(1))
+ 
+-    # print(g.is_connected(1, 2))
++    # print(g.is_connected(1, 2))
+\ No newline at end of file
+Index: visualizer.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>\"\"\"Visualizer for our graph\"\"\"\nimport plotly.graph_objects as go\n\nimport main\nimport dash\nfrom dash import dcc, html, Output, Input, State\n\nimport plotly.io as plo\n\nplo.renderers.default = 'browser'\n\n\ndef visualize_graph(graph: main.AirportsGraph, max_vertices: int = 5000):\n    \"\"\"Visualize graph on map\"\"\"\n    graph_nx = graph.to_networkx(max_vertices)\n\n    latitudes = []\n    longitudes = []\n    node_names = []\n\n    for node in graph_nx.nodes:\n        lat = graph_nx.nodes[node]['latitude']\n        lon = graph_nx.nodes[node]['longitude']\n        latitudes.append(lat)\n        longitudes.append(lon)\n        node_names.append(node)\n\n    # edge_lons = []\n    # edge_lats = []\n    edge_traces = []\n    for edge in graph_nx.edges:\n        node1, node2 = edge\n        lat1, lon1 = graph_nx.nodes[node1]['latitude'], graph_nx.nodes[node1]['longitude']\n        lat2, lon2 = graph_nx.nodes[node2]['latitude'], graph_nx.nodes[node2]['longitude']\n        # None separates the line segments\n        # edge_lats.extend([lat1, lat2, None])\n        # edge_lons.extend([lon1, lon2, None])\n\n        edge_trace = go.Scattermap(\n            mode=\"lines\",\n            lon=[lon1, lon2, None],\n            lat=[lat1, lat2, None],\n            line=dict(width=2, color='rgba(0, 0, 0, 0.1)'),\n            hoverinfo='none'  # potentially distance value or cost of living info\n            # name='Airport Connections',\n            # opacity=0.2\n        )\n        edge_traces.append(edge_trace)\n\n    # edge_traces = go.Scattermap(\n    #     mode=\"lines\",\n    #     lon=edge_lons,\n    #     lat=edge_lats,\n    #     line=dict(width=2, color='rgba(0, 0, 0, 0.1)'),\n    #     name='Airport Connections',\n    #     #opacity=0.2\n    # )\n\n    node_trace = go.Scattermap(\n        mode=\"markers\",\n        lon=longitudes,\n        lat=latitudes,\n        text=node_names,\n        name='Airports',\n        marker={'size': 6, 'color': 'black'},\n    )\n    fig = go.Figure(data=edge_traces + [node_trace])\n    fig.update_layout(\n        margin={'l': 0, 't': 0, 'b': 0, 'r': 0},\n        showlegend=False,\n        map={\n            'center': {'lon': 10, 'lat': 10},\n            'style': \"open-street-map\",\n            'center': {'lon': -20, 'lat': -20},\n            'zoom': 1,\n        },\n        title=\"Airports Network Visualization\",\n    )\n\n    def change_edge_color(node_name):\n        for i, edge in enumerate(list(graph_nx.edges)):\n            if node_name in edge[0] or node_name in edge[1]:\n                fig.data[i].line.color = 'rgba(0, 0, 0, 0.8)'\n            else:\n                fig.data[i].line.color = 'rgba(0, 0, 0, 0.1)'\n        return fig\n\n    def change_color_back():\n        for i, edge in enumerate(list(graph_nx.edges)):\n            fig.data[i].line.color = 'rgba(0, 0, 0, 0.1)'\n        return fig\n\n    # Dash App\n    app = dash.Dash(__name__)\n    app.layout = html.Div([\n        html.H3(\"Airports Network Visualization\"),\n        dcc.Graph(id='world-graph',\n                  figure=fig,\n                  style={'height': '600px', 'width': '100%'}),\n        html.Div(id='output', style={\n                 'marginTop': '20px', 'marginLeft': '300px', 'fontSize': '18px', 'color': 'green'})\n    ])\n\n    clicked_nodes = []\n\n    @app.callback(\n        Output('output', 'children'),\n        Output('world-graph', 'figure'),\n        Input('world-graph', 'clickData'),\n        prevent_initial_call=True\n    )\n\n    def display_click(clickData):\n        \"\"\"...\"\"\"\n        # TODO: ADD DOCSTRING\n        if not clickData or 'points' not in clickData:\n            return \"\"\n\n        point = clickData['points'][0]\n        node_name = point['text']\n\n        if node_name not in graph_nx.nodes:\n            return \"\"\n\n        # Add clicked node to list\n        clicked_nodes.append(node_name)\n\n        if len(clicked_nodes) < 2:\n            change_edge_color(node_name)\n            return f\"Selected node: {node_name}. Click one more node.\", fig\n\n        # Compute distance\n        n1, n2 = clicked_nodes[:2]\n        # lat1, lon1 = graph_nx.nodes[n1]['latitude'], graph_nx.nodes[n1]['longitude']\n        # lat2, lon2 = graph_nx.nodes[n2]['latitude'], graph_nx.nodes[n2]['longitude']\n        # pos1 = (lat1, lon1)\n        # pos2 = (lat2, lon2)\n        connected = False\n        for edge in graph_nx.edges(data=True):\n            if n1 in edge and n2 in edge:\n                print(edge[2][\"weight\"])\n                distance_km = edge[2][\"weight\"]\n                connected = True\n        if connected:\n            # Reset after two clicks\n            clicked_nodes.clear()\n            change_color_back()\n\n            return f\"Distance between {n1} and {n2}: {distance_km:.2f} km\", fig\n        else:\n            clicked_nodes.clear()\n            change_color_back()\n            return \"Selected node is not connected\", fig\n\n    app.run(debug=True)\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/visualizer.py b/visualizer.py
+--- a/visualizer.py	(revision 250ae94af36f5aa97b0c398d06438a6515ebf1b4)
++++ b/visualizer.py	(date 1743307883903)
+@@ -1,155 +1,77 @@
+ """Visualizer for our graph"""
+ import plotly.graph_objects as go
+-
+-import main
++import plotly.io as plo
+ import dash
+-from dash import dcc, html, Output, Input, State
++from dash import dcc, html, Output, Input, ctx
++import main
+ 
+ import plotly.io as plo
+ 
+ plo.renderers.default = 'browser'
+ 
+ 
+-def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 5000):
++def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 5000, output_file: str = ''):
+     """Visualize graph on map"""
+     graph_nx = graph.to_networkx(max_vertices)
+ 
+-    latitudes = []
+-    longitudes = []
+-    node_names = []
+-
++    node_traces = []
+     for node in graph_nx.nodes:
+-        lat = graph_nx.nodes[node]['latitude']
+-        lon = graph_nx.nodes[node]['longitude']
+-        latitudes.append(lat)
+-        longitudes.append(lon)
+-        node_names.append(node)
++        lat1 = graph_nx.nodes[node]['latitude']
++        lon1 = graph_nx.nodes[node]['longitude']
++        id1 = graph_nx.nodes[node]['id']
+ 
+-    # edge_lons = []
+-    # edge_lats = []
+-    edge_traces = []
++        node_trace = go.Scattermap(
++            mode="markers",
++            lon=[lon1],
++            lat=[lat1],
++            text=[node],
++            name="Airports",
++            marker={'size': 4, 'color': 'black'},
++            ids=[id1]
++        )
++        node_traces.append(node_trace)
++
++    edge_lons = []
++    edge_lats = []
+     for edge in graph_nx.edges:
+         node1, node2 = edge
+         lat1, lon1 = graph_nx.nodes[node1]['latitude'], graph_nx.nodes[node1]['longitude']
+         lat2, lon2 = graph_nx.nodes[node2]['latitude'], graph_nx.nodes[node2]['longitude']
+         # None separates the line segments
+-        # edge_lats.extend([lat1, lat2, None])
+-        # edge_lons.extend([lon1, lon2, None])
++        edge_lats.extend([lat1, lat2, None])
++        edge_lons.extend([lon1, lon2, None])
+ 
+-        edge_trace = go.Scattermap(
+-            mode="lines",
+-            lon=[lon1, lon2, None],
+-            lat=[lat1, lat2, None],
+-            line=dict(width=2, color='rgba(0, 0, 0, 0.1)'),
+-            hoverinfo='none'  # potentially distance value or cost of living info
+-            # name='Airport Connections',
+-            # opacity=0.2
+-        )
+-        edge_traces.append(edge_trace)
++    fig = go.Figure(go.Scattermap(
++        mode="lines",
++        lon=edge_lons,
++        lat=edge_lats,
++        line={'color': '#11cd2f', 'width': 2},
++        name='Airport Connections',
++        opacity=0.2
++    ))
+ 
+-    # edge_traces = go.Scattermap(
+-    #     mode="lines",
+-    #     lon=edge_lons,
+-    #     lat=edge_lats,
+-    #     line=dict(width=2, color='rgba(0, 0, 0, 0.1)'),
+-    #     name='Airport Connections',
+-    #     #opacity=0.2
+-    # )
+-
+-    node_trace = go.Scattermap(
++    fig.add_trace(go.Scattermap(
+         mode="markers",
+         lon=longitudes,
+         lat=latitudes,
+         text=node_names,
+         name='Airports',
+-        marker={'size': 6, 'color': 'black'},
+-    )
+-    fig = go.Figure(data=edge_traces + [node_trace])
++        marker={'size': 6, 'color': 'blue'},
++        opacity=0.6
++    ))
++
+     fig.update_layout(
+         margin={'l': 0, 't': 0, 'b': 0, 'r': 0},
+         showlegend=False,
+         map={
+             'center': {'lon': 10, 'lat': 10},
+             'style': "open-street-map",
+-            'center': {'lon': -20, 'lat': -20},
+             'zoom': 1,
+         },
+-        title="Airports Network Visualization",
++        title="Airports Network Visualization"
+     )
+ 
+-    def change_edge_color(node_name):
+-        for i, edge in enumerate(list(graph_nx.edges)):
+-            if node_name in edge[0] or node_name in edge[1]:
+-                fig.data[i].line.color = 'rgba(0, 0, 0, 0.8)'
+-            else:
+-                fig.data[i].line.color = 'rgba(0, 0, 0, 0.1)'
+-        return fig
+-
+-    def change_color_back():
+-        for i, edge in enumerate(list(graph_nx.edges)):
+-            fig.data[i].line.color = 'rgba(0, 0, 0, 0.1)'
+-        return fig
+-
+-    # Dash App
+-    app = dash.Dash(__name__)
+-    app.layout = html.Div([
+-        html.H3("Airports Network Visualization"),
+-        dcc.Graph(id='world-graph',
+-                  figure=fig,
+-                  style={'height': '600px', 'width': '100%'}),
+-        html.Div(id='output', style={
+-                 'marginTop': '20px', 'marginLeft': '300px', 'fontSize': '18px', 'color': 'green'})
+-    ])
+-
+-    clicked_nodes = []
+-
+-    @app.callback(
+-        Output('output', 'children'),
+-        Output('world-graph', 'figure'),
+-        Input('world-graph', 'clickData'),
+-        prevent_initial_call=True
+-    )
+-
+-    def display_click(clickData):
+-        """..."""
+-        # TODO: ADD DOCSTRING
+-        if not clickData or 'points' not in clickData:
+-            return ""
+-
+-        point = clickData['points'][0]
+-        node_name = point['text']
+-
+-        if node_name not in graph_nx.nodes:
+-            return ""
+-
+-        # Add clicked node to list
+-        clicked_nodes.append(node_name)
+-
+-        if len(clicked_nodes) < 2:
+-            change_edge_color(node_name)
+-            return f"Selected node: {node_name}. Click one more node.", fig
+-
+-        # Compute distance
+-        n1, n2 = clicked_nodes[:2]
+-        # lat1, lon1 = graph_nx.nodes[n1]['latitude'], graph_nx.nodes[n1]['longitude']
+-        # lat2, lon2 = graph_nx.nodes[n2]['latitude'], graph_nx.nodes[n2]['longitude']
+-        # pos1 = (lat1, lon1)
+-        # pos2 = (lat2, lon2)
+-        connected = False
+-        for edge in graph_nx.edges(data=True):
+-            if n1 in edge and n2 in edge:
+-                print(edge[2]["weight"])
+-                distance_km = edge[2]["weight"]
+-                connected = True
+-        if connected:
+-            # Reset after two clicks
+-            clicked_nodes.clear()
+-            change_color_back()
+-
+-            return f"Distance between {n1} and {n2}: {distance_km:.2f} km", fig
+-        else:
+-            clicked_nodes.clear()
+-            change_color_back()
+-            return "Selected node is not connected", fig
+-
+-    app.run(debug=True)
++    if output_file:
++        fig.write_image(output_file)
++    else:
++        fig.show()
