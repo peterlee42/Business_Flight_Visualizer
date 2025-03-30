@@ -74,6 +74,10 @@ class _AirportVertex:
         """Return the airport id of neighbours of this vertex"""
         return set(self._adjacent.keys())
 
+    def get_degree(self) -> int:
+        """Return the degree of this vertex"""
+        return len(self._adjacent)
+
     def get_distance(self, other: _AirportVertex) -> float:
         """Return the distance between this vertex and another vertex"""
         if self.id == other.id:
@@ -252,11 +256,21 @@ class AirportsGraph:
             close_airports = close_airports.intersection(
                 {neighbour for neighbour in self.get_vertex(airport_id).get_neighbours() if
                  self.get_earth_distance(airport_id, neighbour) <= max_distance})
-        result = []
-        for i in close_airports:
-            result.append(self._vertices[i].name)
-        return result
 
+        return close_airports
+    
+    def rank_airports(self, airport_ids: set[int], max_out_size: int) -> list[int]:
+        """Rank the airports by their number of connections"""
+        # Input check
+        for airport_id in airport_ids:
+            if airport_id not in self._vertices:
+                raise KeyError("Airport ID not found in the graph.")
+
+        # Rank the airports by their degree (number of connections)
+        # and return the top max_out_size airports
+        ranked_airports = sorted(airport_ids, key=lambda x: self.get_vertex(x).get_degree(), reverse=True)
+
+        return ranked_airports[:max_out_size]
 
 # TODO: SAFETY INDEX
 def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
