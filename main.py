@@ -248,7 +248,7 @@ class AirportsGraph:
 
         return close_airports
 
-    def rank_airports_degrees(self, airport_ids: set[int], max_out_size: int) -> list[int]:
+    def rank_airports_degrees(self, airport_ids: set[int], max_out_size: int = 5) -> list[int]:
         """Rank the airports by their degree
 
         Preconditions:
@@ -262,7 +262,7 @@ class AirportsGraph:
 
         return ranked_airports[:max_out_size]
     
-    def rank_airports_safety(self, airport_ids: set[int], max_out_size: int) -> list[int]:
+    def rank_airports_safety(self, airport_ids: set[int], max_out_size: int = 5) -> list[int]:
         """Rank the airports by their safety index
 
         Preconditions:
