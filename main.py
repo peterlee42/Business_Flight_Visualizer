@@ -297,11 +297,11 @@ if __name__ == "__main__":
     # })
     from visualizer import visualize_graph
 
-    # airports_data = "data/airports_small.dat"
-    # routes_data = "data/routes_small.dat"
+    airports_data = "data/airports_small.dat"
+    routes_data = "data/routes_small.dat"
 
-    airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
-    routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
+    # airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
+    # routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
 
     airports_df, routes_df = load_airport_and_route_data(
         airports_data, routes_data)

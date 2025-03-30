@@ -2,14 +2,15 @@
 import pandas as pd
 
 
-def load_airport_and_route_data(airports_data_path: str, routes_data_path: str) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Given paths to a valid airport data and routes data, load, clean, and filter the datasets and return a tuple
-    of DataFrame objects. First index being the Dataframe for airports data and second index being the DataFrame object
-    for routes data.
+def load_data(airports_data_path: str, routes_data_path: str, safety_index_path: str) -> tuple[
+        pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Given paths to a valid airport data, routes data and safety index data, load, clean, and filter the datasets and
+    return a tuple of the respective DataFrame objects in the same order.
 
     Preconditions:
-    - airports_data_path is a valid path to a valid airports dataset from OpenFlights
-    - routess_data_path is a valid path to a valid routes dataset from OpenFlights
+        - airports_data_path is a valid path to a valid airports dataset from OpenFlights
+        - routess_data_path is a valid path to a valid routes dataset from OpenFlights
+        - safety_index_path is a valid path to a valid safety index dataset from worldpopulationreview
     """
 
     # ----------Airports Data----------
@@ -45,15 +46,20 @@ def load_airport_and_route_data(airports_data_path: str, routes_data_path: str) 
     routes_df = routes_df.astype(
         {col: "string" for col in routes_df.select_dtypes(include=["object"]).columns})
 
-    # ----------FILTER DATA SO THAT ONLY AIRPORTS IN ROUTES WILL BE IN AIRPORTS DATAFRAME----------
-    valid_airport_ids = set(routes_df["Source airport ID"]).union(set(routes_df["Destination airport ID"]))
-    airports_df = airports_df[airports_df["Airport ID"].isin(valid_airport_ids)]
+    # ----------Safety Index Data----------
+    safety_df = pd.read_csv(safety_index_path)
 
-    return airports_df, routes_df
+    safety_df = safety_df.dropna()
 
+    # ----------FILTER DATA SO THAT ONLY AIRPORTS IN ROUTES AND AIRPORTS WHOS COUNTRY IS IN SAFETY INDEX DATA WILL BE
+    # IN AIRPORTS DATAFRAME----------
+    valid_airports = set(routes_df["Source airport ID"]).union(set(routes_df["Destination airport ID"]))
+    airports_df = airports_df[airports_df["Airport ID"].isin(valid_airports)]
 
-"""----------COST OF LIVING DATA----------"""
-# TODO: Maybe add this as graph edge or weighted vertex
+    airports_df = airports_df[airports_df["Country"].isin(set(safety_df["country"]))]
+
+    return airports_df, routes_df, safety_df
+
 
 if __name__ == "__main__":
     airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
@@ -62,7 +68,10 @@ if __name__ == "__main__":
     routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
     # routes_data = "data/routes_small.dat"
 
-    my_airports_df, my_routes_df = load_airport_and_route_data(airports_data, routes_data)
+    safety_index_data = "data/safest-countries-in-the-world-2025.csv"
+
+    my_airports_df, my_routes_df, my_safety_df = load_data(airports_data, routes_data, safety_index_data)
 
     print(my_airports_df.shape)
-    print(my_routes_df.shape)
+    # print(my_routes_df.shape)
+    # print(my_safety_df.shape)

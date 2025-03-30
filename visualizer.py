@@ -1,38 +1,16 @@
-"""CSC111 Winter 2025 Exercise 3-4 (Graphs Visualization)
-
-Module Description
-==================
-
-This module contains some Python functions that you can use to visualize the graphs
-you're working with on this assignment. You should not modify anything in this file.
-It will not be submitted for grading.
-
-Disclaimer: we didn't have time to make this file fully PythonTA-compliant!
-
-Copyright and Usage Information
-===============================
-
-This file is provided solely for the personal and private use of students
-taking CSC111 at the University of Toronto St. George campus. All forms of
-distribution of this code, whether as given or with any changes, are
-expressly prohibited. For more information on copyright for CSC111 materials,
-please consult our Course Syllabus.
-
-This file is Copyright (c) 2025 Mario Badr, David Liu, and Isaac Waller.
-"""
+"""Visualizer for our graph"""
 import plotly.graph_objects as go
 
 import main
 import dash
 from dash import dcc, html, Output, Input, State
-from geopy.distance import great_circle
 
 import plotly.io as plo
 
 plo.renderers.default = 'browser'
 
 
-def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 5000, output_file: str = ''):
+def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 5000):
     """Visualize graph on map"""
     graph_nx = graph.to_networkx(max_vertices)
 
@@ -63,9 +41,9 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 5000, output_
             lon=[lon1, lon2, None],
             lat=[lat1, lat2, None],
             line=dict(width=2, color='rgba(0, 0, 0, 0.1)'),
-            hoverinfo='none' #potentially distance value or cost of living info
+            hoverinfo='none'  # potentially distance value or cost of living info
             # name='Airport Connections',
-            #opacity=0.2
+            # opacity=0.2
         )
         edge_traces.append(edge_trace)
 
@@ -86,10 +64,10 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 5000, output_
         name='Airports',
         marker={'size': 6, 'color': 'black'},
     )
-    fig = go.Figure(data = edge_traces + [node_trace])
+    fig = go.Figure(data=edge_traces + [node_trace])
     fig.update_layout(
         margin={'l': 0, 't': 0, 'b': 0, 'r': 0},
-        showlegend = False,
+        showlegend=False,
         map={
             'center': {'lon': 10, 'lat': 10},
             'style': "open-street-map",
@@ -105,23 +83,24 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 5000, output_
                 fig.data[i].line.color = 'rgba(0, 0, 0, 0.8)'
             else:
                 fig.data[i].line.color = 'rgba(0, 0, 0, 0.1)'
-        return fig 
+        return fig
 
     def change_color_back():
         for i, edge in enumerate(list(graph_nx.edges)):
-                fig.data[i].line.color = 'rgba(0, 0, 0, 0.1)'
-        return fig 
+            fig.data[i].line.color = 'rgba(0, 0, 0, 0.1)'
+        return fig
 
     # Dash App
     app = dash.Dash(__name__)
     app.layout = html.Div([
         html.H3("Airports Network Visualization"),
-        dcc.Graph(id='world-graph', 
+        dcc.Graph(id='world-graph',
                   figure=fig,
                   style={'height': '600px', 'width': '100%'}),
-        html.Div(id='output', style={'marginTop': '20px', 'marginLeft': '300px', 'fontSize': '18px', 'color': 'green'})
+        html.Div(id='output', style={
+                 'marginTop': '20px', 'marginLeft': '300px', 'fontSize': '18px', 'color': 'green'})
     ])
-    
+
     clicked_nodes = []
 
     @app.callback(
@@ -130,10 +109,11 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 5000, output_
         Input('world-graph', 'clickData'),
         prevent_initial_call=True
     )
+
     def display_click(clickData):
         if not clickData or 'points' not in clickData:
             return ""
-        
+
         point = clickData['points'][0]
         node_name = point['text']
 
@@ -154,7 +134,7 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 5000, output_
         # pos1 = (lat1, lon1)
         # pos2 = (lat2, lon2)
         connected = False
-        for edge in graph_nx.edges(data = True):
+        for edge in graph_nx.edges(data=True):
             if n1 in edge and n2 in edge:
                 print(edge[2]["weight"])
                 distance_km = edge[2]["weight"]
@@ -170,10 +150,4 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 5000, output_
             change_color_back()
             return "Selected node is not connected", fig
 
-
     app.run(debug=True)
-
-    # if output_file:
-    #     fig.write_image(output_file)
-    # else:
-    #     fig.show()
