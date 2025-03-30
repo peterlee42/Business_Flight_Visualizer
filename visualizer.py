@@ -1,5 +1,9 @@
 """Visualizer for our graph"""
 import plotly.graph_objects as go
+
+import main
+import dash
+from dash import dcc, html, Output, Input, State
 import plotly.io as plo
 import dash
 from dash import dcc, html, Output, Input, ctx
@@ -187,14 +191,14 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000) -> None
         Input('submit-button-state', 'n_clicks'),
         prevent_initial_call=True
     )
-    def display_click(clickdata: any, max_distance: any, button_state: any) -> (str, go.Figure):
+    def display_click(clickdata: any, max_distance: any, button_state: any) -> tuple[str, go.Figure]:
         """docstring"""
         if ctx.triggered_id == 'submit-button-state':
             if len(clicked_node) == 0:
                 return 'please lick one airport'
 
             id_list = []
-            result1 = ""
+            result1 = []
             for i in clicked_node:
                 id_list.append(i['points'][0]['id'])
                 result1 = main.AirportsGraph.get_close_airports(
