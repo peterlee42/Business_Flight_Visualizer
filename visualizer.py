@@ -76,7 +76,7 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000) -> None
     )
 
     def change_node_color(node_name: str) -> go.Figure:
-        """docstring"""
+        """highlight the vertex chosen"""
         for i, value in enumerate(fig.data):
             if value in edge_traces or value in text_traces:
                 pass
@@ -87,7 +87,7 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000) -> None
         return fig
 
     def change_node_back() -> go.Figure:
-        """docstring"""
+        """change all the vertex back to original state"""
         for i, value in enumerate(fig.data):
             if value in edge_traces or value in text_traces:
                 pass
@@ -196,7 +196,7 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000) -> None
         prevent_initial_call=True
     )
     def display_click(clickdata: Any, max_distance: Any, button_state: Any) -> tuple[str, go.Figure]:
-        """docstring"""
+        """perform computation from the input and display on the webpage"""
         if ctx.triggered_id == 'submit-button-state':
             if len(clicked_node) == 0:
                 return 'please click one airport', fig
