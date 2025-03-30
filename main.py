@@ -16,7 +16,7 @@ class Location:
 
     Instance Attributes:
         - city: The city of the location
-        - country: The country for the location
+        - country: The country for the locationaaa
         - timezone: The timezone for the location
 
     Representation Invariants:
