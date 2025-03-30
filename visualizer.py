@@ -111,6 +111,8 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 5000):
     )
 
     def display_click(clickData):
+        """..."""
+        # TODO: ADD DOCSTRING
         if not clickData or 'points' not in clickData:
             return ""
 

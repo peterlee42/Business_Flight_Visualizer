@@ -6,7 +6,7 @@ from math import radians, cos, sin, asin, sqrt
 
 import pandas as pd
 
-from airports_data import load_airport_and_route_data
+from airports_data import load_data
 import networkx as nx
 
 
@@ -35,8 +35,6 @@ class _AirportVertex:
     Instance Attributes:
     - id: The OpenFlights id of an airport
     - name: The name of an airport
-    - iata: The IATA code of an airport
-    - icao: The ICAO code of an airport
     - altitude: The altitude of an airport
     - coordinates: The coordinates of an airport on map using longitude and latitude
     - location: The location of an airport
@@ -44,30 +42,25 @@ class _AirportVertex:
     Representation Invariants:
     - self.id >= 0
     - self.name != ''
-    - self.iata != ''
-    - self.icao != ''
     - self.altitude > 0
     - self.coordinates != tuple()
     """
     id: int
     name: str
-    iata: str
-    icao: str
     altitude: int
     coordinates: tuple[float, float]
     location: Location
 
-    def __init__(self, airport_id: int, airport_name: str, airport_iata: str, airport_iaco: str, airport_altitude: int,
+    def __init__(self, airport_id: int, airport_name: str, airport_altitude: int,
                  airport_coordinates: tuple[float, float], airport_location: Location):
         self.id = airport_id
         self.name = airport_name
-        self.iata = airport_iata
-        self.icao = airport_iaco
         self.altitude = airport_altitude
         self.coordinates = airport_coordinates
         self.location = airport_location
 
 
+# TODO: ADD IMPLEMENTATION FOR WEIGHTED VERTICES BASED ON SAFETY INDEX!!!
 class AirportsGraph:
     """A weighted graph used to represent airport connections and the distances of the distance of each route"""
 
@@ -204,7 +197,7 @@ class AirportsGraph:
         """Get the number of vertices in the graph"""
         return len(self._vertices)
 
-    def to_networkx(self, max_vertices: int = 5000) -> nx.Graph:
+    def to_networkx(self, max_vertices: int = 100) -> nx.Graph:
         """Convert this graph into a networkx Graph.
 
         max_vertices specifies the maximum number of vertices that can appear in the graph.
@@ -248,6 +241,7 @@ class AirportsGraph:
         return close_airports
 
 
+# TODO: SAFETY INDEX
 def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
     """Given two pandas DataFrame objects airports and routes, build and return an airport graph using the data
 
@@ -265,9 +259,8 @@ def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
     # Create vertices using itertuples instead of to_dict
     for row in df1.itertuples(index=False):
         airport_id = row[0]  # This corresponds to 'Airport ID'
-        current_item = _AirportVertex(airport_id, row[1], row[4], row[5], row[8],
-                                      (row[6], row[7]),
-                                      Location(row[2], row[3], row[9]))
+        current_item = _AirportVertex(airport_id, row[1], row[6], (row[4], row[5]),
+                                      Location(row[2], row[3], row[7]))
         airports_graph.add_vertex(airport_id, current_item)
 
     # Create edges for routes using itertuples
@@ -291,20 +284,23 @@ if __name__ == "__main__":
     # import python_ta
     #
     # python_ta.check_all(config={
-    #     'extra-imports': [],  # the names (strs) of imported modules
+    #     'extra-imports': ["pandas", "networkx", "visualizer"],  # the names (strs) of imported modules
     #     'allowed-io': [],  # the names (strs) of functions that call print/open/input
     #     'max-line-length':` 120
     # })
+
     from visualizer import visualize_graph
 
-    airports_data = "data/airports_small.dat"
-    routes_data = "data/routes_small.dat"
+    # airports_data = "data/airports_small.dat"
+    # routes_data = "data/routes_small.dat"
 
-    # airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
-    # routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
+    airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
+    routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
 
-    airports_df, routes_df = load_airport_and_route_data(
-        airports_data, routes_data)
+    safety_data = "data/safest-countries-in-the-world-2025.csv"
+
+    airports_df, routes_df, safety_df = load_data(
+        airports_data, routes_data, safety_data)
 
     g = load_airports_graph(airports_df, routes_df)
 

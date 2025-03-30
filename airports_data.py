@@ -12,7 +12,8 @@ def load_data(airports_data_path: str, routes_data_path: str, safety_index_path:
         - routess_data_path is a valid path to a valid routes dataset from OpenFlights
         - safety_index_path is a valid path to a valid safety index dataset from worldpopulationreview
     """
-
+    # "Airport ID", "Name", "City", "Country" "Latitude", "Longitude",
+    #                        "Altitude", "Timezone",
     # ----------Airports Data----------
     airport_columns = ["Airport ID", "Name", "City", "Country", "IATA", "ICAO", "Latitude", "Longitude",
                        "Altitude", "Timezone", "DST", "Tz database time zone", "Type", "Source"]
@@ -20,7 +21,7 @@ def load_data(airports_data_path: str, routes_data_path: str, safety_index_path:
     airports_df = pd.read_csv(airports_data_path, delimiter=",", names=airport_columns)
 
     airports_df = airports_df.drop(
-        ["Tz database time zone", "Type", "Source"], axis=1)
+        ["IATA", "ICAO", "DST", "Tz database time zone", "Type", "Source"], axis=1)
 
     airports_df = airports_df.astype(
         {col: "string" for col in airports_df.select_dtypes(include=["object"]).columns})
@@ -53,10 +54,10 @@ def load_data(airports_data_path: str, routes_data_path: str, safety_index_path:
 
     # ----------FILTER DATA SO THAT ONLY AIRPORTS IN ROUTES AND AIRPORTS WHOS COUNTRY IS IN SAFETY INDEX DATA WILL BE
     # IN AIRPORTS DATAFRAME----------
+    airports_df = airports_df[airports_df["Country"].isin(set(safety_df["country"]))]
+
     valid_airports = set(routes_df["Source airport ID"]).union(set(routes_df["Destination airport ID"]))
     airports_df = airports_df[airports_df["Airport ID"].isin(valid_airports)]
-
-    airports_df = airports_df[airports_df["Country"].isin(set(safety_df["country"]))]
 
     return airports_df, routes_df, safety_df
 
@@ -72,6 +73,6 @@ if __name__ == "__main__":
 
     my_airports_df, my_routes_df, my_safety_df = load_data(airports_data, routes_data, safety_index_data)
 
-    print(my_airports_df.shape)
-    # print(my_routes_df.shape)
-    # print(my_safety_df.shape)
+    print('Airports DataFrame Shape: ', my_airports_df.shape)
+    print('Routes DataFrame Shape', my_routes_df.shape)
+    print('Safety Index DataFrame Shape', my_safety_df.shape)
