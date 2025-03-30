@@ -204,9 +204,11 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000) -> None
             result1 = []
             for i in clicked_node:
                 id_list.append(i['points'][0]['id'])
-                result1 = main.AirportsGraph.get_close_airports(
+            
+            close_airport_ids = main.AirportsGraph.get_close_airports(
                     graph, id_list, int(max_distance))
-            res = ', '.join(result1)
+            close_airport_names = [graph.get_vertex(airport).name for airport in close_airport_ids]
+            res = ', '.join(close_airport_names)
             change_node_back()
             clicked_nodes_name.clear()
             clicked_node.clear()
