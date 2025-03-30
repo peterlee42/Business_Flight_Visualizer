@@ -1,9 +1,6 @@
 """Visualizer for our graph"""
 import plotly.graph_objects as go
 
-import main
-import dash
-from dash import dcc, html, Output, Input, State
 import plotly.io as plo
 import dash
 from dash import dcc, html, Output, Input, ctx
@@ -102,24 +99,24 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000) -> None
 
     app.layout = html.Div(
         style={
-            'backgroundColor': '#f9f9f9',
+            'backgroundColor': '#e0e1dd',
             'fontFamily': 'Arial, sans-serif',
             'padding': '20px'
         },
-        children=[
-            html.H3(
+        children=[html.Div([
+            html.H2(
                 "Business Travel Flight Visualizer",
-                style={'textAlign': 'center', 'color': '#333'}
+                style={'textAlign': 'center', 'color': '#0d1b2a'}
             ),
             dcc.Graph(
                 id='world-graph',
                 figure=fig,
                 style={
-                    'height': '600px',
+                    'height': '60vh',
                     'width': '100%',
-                    'border': '2px solid #ccc',
+                    'border': '2px solid',
                     'borderRadius': '5px',
-                    'boxShadow': '2px 2px 12px rgba(0,0,0,0.1)'
+                    'max-width': '1000px'
                 }
             ),
             html.Div(
@@ -177,7 +174,13 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000) -> None
                     'color': 'green'
                 }
             )
-        ]
+        ],
+            style={
+                'display': 'flex',
+                'flex-direction': 'column',
+                'align-items': 'center'
+            }
+        )]
     )
 
     clicked_nodes_name = []
