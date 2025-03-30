@@ -367,5 +367,5 @@ if __name__ == "__main__":
 
     g = load_airports_graph(airports_df, routes_df)
 
-    visualize_graph(g)
-    # visualize_graph_app(g)
+    #visualize_graph(g)
+    visualize_graph_app(g)
