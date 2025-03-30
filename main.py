@@ -12,11 +12,17 @@ import networkx as nx
 
 @dataclass
 class Location:
-    """Location illustrating the city, country, and timezone
+    """A location, showing the city, country, and timezone
 
-    TODO: ADD DESCRIPTION FOR EACH ATTRIBUTE
     Instance Attributes:
-    -
+        - city: The city of the location
+        - country: The country for the location
+        - timezone: The timezone for the location
+
+    Representation Invariants:
+        - self.city != ''
+        - self.country != ''
+        - self.timezone != ''
     """
     city: str
     country: str
@@ -26,7 +32,6 @@ class Location:
 class _AirportVertex:
     """Airport Vertex Class
 
-    TODO: ADD DESCRIPTION FOR EACH ATTRIBUTE
     Instance Attributes:
     - id: int
         The airport id
@@ -44,6 +49,21 @@ class _AirportVertex:
         The airport location (city, country, timezone)
     - _adjacent: dict[Any, float]
         The adjacent airports and their distances, maps airport id to weight (distance)
+    - id: The OpenFlights id of an airport
+    - name: The name of an airport
+    - iata: The IATA code of an airport
+    - icao: The ICAO code of an airport
+    - altitude: The altitude of an airport
+    - coordinates: The coordinates of an airport on map using longitude and latitude
+    - location: The location of an airport
+
+    Representation Invariants:
+    - self.id >= 0
+    - self.name != ''
+    - self.iata != ''
+    - self.icao != ''
+    - self.altitude > 0
+    - self.coordinates != tuple()
     """
     id: int
     name: str
@@ -99,10 +119,7 @@ class _AirportVertex:
 
 
 class AirportsGraph:
-    """Graph class
-
-    TODO: ADD DOCSTRING
-    """
+    """A weighted graph used to represent airport connections and the distances of the distance of each route"""
 
     # Private Instance Attributes:
     #     - _vertices:
@@ -198,30 +215,16 @@ class AirportsGraph:
         max_vertices specifies the maximum number of vertices that can appear in the graph.
         (This is necessary to limit the visualization output for large graphs.)
         """
-        # g = nx.Graph()
-        #
-        # for airport_id in self._vertices[:max_vertices]:
-        #     g.add_node(self._vertices[airport_id].name, )
-        #
-        # # Add edges using names instead of numerical IDs
-        # for source_id, source_index in self._edge_indices.items():
-        #     for dest_id, weight in enumerate(self._edges[source_index]):
-        #         if weight != 0:  # Only add actual edges
-        #             g.add_edge(id_to_name[source_id], id_to_name[list(self._edge_indices.keys())[dest_id]],
-        #                        weight=weight)
-        #
-        # return g
-
         graph_nx = nx.Graph()
         for v in self._vertices.values():
             graph_nx.add_node(
-                v.name, latitude=v.coordinates[0], longitude=v.coordinates[1], id = v.id)
+                v.name, latitude=v.coordinates[0], longitude=v.coordinates[1])
 
             for u in v.get_neighbours():
                 u_vertex = self._vertices[u]
                 if graph_nx.number_of_nodes() < max_vertices:
                     graph_nx.add_node(u_vertex.name, latitude=u_vertex.coordinates[0],
-                                      longitude=u_vertex.coordinates[1], id = u_vertex.id)
+                                      longitude=u_vertex.coordinates[1])
 
                 if u_vertex.name in graph_nx.nodes:
                     distance = v.get_distance(u_vertex)
@@ -299,17 +302,11 @@ if __name__ == "__main__":
     # })
     from visualizer import visualize_graph
 
-    # airports_data = "data/airports_small.dat"
-    # routes_data = "data/routes_small.dat"
-
-    #airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
-    #airports_data = "/Users/billychen/Downloads/coding/school-project/csc111p2-main/data/airports_small.dat"
-
-    #routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
-    #routes_data = "/Users/billychen/Downloads/coding/school-project/csc111p2-main/data/routes_small.dat"
-
     airports_data = "data/airports_small.dat"
     routes_data = "data/routes_small.dat"
+
+    # airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
+    # routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
 
     airports_df, routes_df = load_airport_and_route_data(
         airports_data, routes_data)
