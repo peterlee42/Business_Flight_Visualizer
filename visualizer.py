@@ -221,6 +221,7 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 200) -> N
             rank_airport_names = [
                 graph._vertices[airport].item.name for airport in rank_airport_ids
             ]
+            rank_airport_names = rank_airport_names[:5]
             res = ", ".join(rank_airport_names)
             change_node_back()
             clicked_nodes_name.clear()
