@@ -7,10 +7,17 @@ import plotly.io as plo
 import dash
 from dash import dcc, html, Output, Input, ctx
 
+import os
+import webbrowser
+from threading import Timer
+
 import main
 
 plo.renderers.default = "browser"
 
+def open_browser():
+    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        webbrowser.open_new("http://127.0.0.1:8050/")
 
 def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> None:
     """Interactive Graph Visualizer"""
@@ -251,6 +258,7 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
 
         return "", fig
 
+    Timer(1, open_browser).start()
     app.run(debug=True)
 
 

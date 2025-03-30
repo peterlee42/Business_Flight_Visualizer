@@ -9,6 +9,8 @@ from typing import Any, Union
 import networkx as nx
 import pandas as pd
 
+import os 
+
 from airports_data import load_data
 
 
@@ -366,12 +368,15 @@ if __name__ == "__main__":
 
     safety_data = "data/safest-countries-in-the-world-2025.csv"
 
+    # ----------Our heatmap visualizer for big data----------
+    airports_df, routes_df = load_data(airports_data, routes_data, safety_data)
+    airports_graph_full = load_airports_graph(airports_df, routes_df)
+    if os.environ.get("WERKZEUG_RUN_MAIN") == "true": #prevent reloading
+        visualize_graph(airports_graph_full)
+
     # ----------Our visualizer app for small data----------
     small_airports_df, small_routes_df = load_data(small_airports_data, small_routes_data, safety_data)
     small_airports_graph = load_airports_graph(small_airports_df, small_routes_df)
     visualize_graph_app(small_airports_graph)
 
-    # ----------Our heatmap visualizer for big data----------
-    airports_df, routes_df = load_data(airports_data, routes_data, safety_data)
-    airports_graph_full = load_airports_graph(airports_df, routes_df)
-    visualize_graph(airports_graph_full)
+    
