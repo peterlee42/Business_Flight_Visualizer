@@ -11,7 +11,7 @@ import main
 plo.renderers.default = "browser"
 
 
-def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> None:
+def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 200) -> None:
     """Interactive Graph Visualizer"""
     graph_nx = graph.to_networkx(max_vertices)
 
@@ -217,10 +217,12 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
             close_airport_ids = main.AirportsGraph.get_close_airports(
                 graph, id_list, int(max_distance)
             )
-            close_airport_names = [
-                graph._vertices[airport].item.name for airport in close_airport_ids
+            rank_airport_ids = main.AirportsGraph.rank_airports_connections(graph, close_airport_ids)
+            rank_airport_names = [
+                graph._vertices[airport].item.name for airport in rank_airport_ids
             ]
-            res = ", ".join(close_airport_names)
+            rank_airport_names = rank_airport_names[:5]
+            res = ", ".join(rank_airport_names)
             change_node_back()
             clicked_nodes_name.clear()
             clicked_node.clear()
@@ -312,7 +314,6 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):
         map={
             "center": {"lon": 10, "lat": 10},
             "style": "open-street-map",
-            "center": {"lon": -20, "lat": -20},
             "zoom": 1,
         },
         title="Airports Network Visualization",
