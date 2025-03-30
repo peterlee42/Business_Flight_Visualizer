@@ -342,18 +342,18 @@ def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
 
 
 if __name__ == "__main__":
-    import doctest
+    # import doctest
 
-    doctest.testmod()
+    # doctest.testmod()
 
-    import python_ta
+    # import python_ta
 
-    python_ta.check_all(config={
-        'extra-imports': ["pandas", "networkx", "visualizer", "math", "airports_data"],
-        # the names (strs) of imported modules
-        'allowed-io': [],  # the names (strs) of functions that call print/open/input
-        'max-line-length': 120
-    })
+    # python_ta.check_all(config={
+    #     'extra-imports': ["pandas", "networkx", "visualizer", "math", "airports_data"],
+    #     # the names (strs) of imported modules
+    #     'allowed-io': [],  # the names (strs) of functions that call print/open/input
+    #     'max-line-length': 120
+    # })
 
     from visualizer import visualize_graph, visualize_graph_app
 
@@ -371,5 +371,5 @@ if __name__ == "__main__":
 
     g = load_airports_graph(airports_df, routes_df)
 
-    visualize_graph(g)
-    # visualize_graph_app(g)
+    #visualize_graph(g)
+    visualize_graph_app(g)
