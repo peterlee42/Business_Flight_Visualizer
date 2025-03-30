@@ -50,6 +50,7 @@ class _AirportVertex:
     altitude: int
     coordinates: tuple[float, float]
     location: Location
+    _adjacent: dict[int, float]
 
     def __init__(self, airport_id: int, airport_name: str, airport_altitude: int,
                  airport_coordinates: tuple[float, float], airport_location: Location):
@@ -58,6 +59,40 @@ class _AirportVertex:
         self.altitude = airport_altitude
         self.coordinates = airport_coordinates
         self.location = airport_location
+        self._adjacent = {}
+
+    def is_adjacent(self, other: _AirportVertex) -> bool:
+        """Check if this vertex is adjacent to another vertex"""
+        if self.id == other.id:
+            return False
+        elif self._adjacent.get(other.id) is not None and other._adjacent.get(self.id) is not None:
+            return True
+        else:
+            return False
+
+    def get_neighbours(self) -> set[int]:
+        """Return the airport id of neighbours of this vertex"""
+        return set(self._adjacent.keys())
+
+    def get_distance(self, other: _AirportVertex) -> float:
+        """Return the distance between this vertex and another vertex"""
+        if self.id == other.id:
+            return 0.0
+        elif self._adjacent.get(other.id) is not None:
+            return self._adjacent[other.id]
+        else:
+            raise ValueError("No distance given between these two airports.")
+
+    def add_adjacent(self, other: _AirportVertex, distance: float) -> None:
+        """Add an adjacent airport and its distance to this vertex. Since the graph is not oriented, we also add the
+        reverse edge."""
+        if self.id == other.id:
+            raise ValueError("Cannot add an airport to itself.")
+        elif other.id in self._adjacent or self.id in other._adjacent:
+            raise ValueError("Airport already exists in the adjacent list.")
+        else:
+            self._adjacent[other.id] = distance
+            other._adjacent[self.id] = distance
 
 
 # TODO: ADD IMPLEMENTATION FOR WEIGHTED VERTICES BASED ON SAFETY INDEX!!!
@@ -75,73 +110,35 @@ class AirportsGraph:
     #         Maps vertex item (id) to edge index.
 
     _vertices: dict[Any, _AirportVertex]
-    _edges: list[list[int]]
-    _edge_indices: dict[Any, int]
 
     def __init__(self):
         self._vertices = {}
-        self._edges = []
-        self._edge_indices = {}
-
-        # TODO: Fix implementation (maybe do one like EX4)
 
     def add_vertex(self, airport_id: int, item: _AirportVertex) -> None:
-        """Add an airport to the graph using its id"""
+        """Add an airport to the graph, mapping the airport id to the vertex object"""
         if airport_id not in self._vertices:
             self._vertices[airport_id] = item
-
-            # add new row of zeroes to make this a nxn matrix
-            for row in self._edges:
-                row.append(0)
-            # add another column of zeroes
-            self._edges.append([0] * (len(self._edges) + 1))
-            self._edge_indices[airport_id] = len(self._edge_indices) - 1
 
     def add_edge(self, source_id: int, destination_id: int) -> None:
         """Add an edge to the graph"""
         if source_id in self._vertices and destination_id in self._vertices:
-            src_id_index = self._edge_indices[source_id]
-            dest_id_index = self._edge_indices[destination_id]
-
+            source_vertex = self.get_vertex(source_id)
+            destination_vertex = self.get_vertex(destination_id)
             # case if edge already made from other side to improve speed. we assume 0 means edge does not exist.
-            if self._edges[src_id_index][dest_id_index] != 0:
-                return
+            if source_vertex.is_adjacent(destination_vertex):
+                raise ValueError("Edge already exists between these two airports.")
             else:
-                distance = self.get_distance(source_id, destination_id)
+                distance = self.get_earth_distance(source_id, destination_id)
 
-                self._edges[src_id_index][dest_id_index] = distance
-                self._edges[dest_id_index][src_id_index] = distance
-
+                source_vertex.add_adjacent(destination_vertex, distance)  # Will add the reverse edge as well
         else:
-            raise KeyError(
-                "Source ID or Destination ID do not exist in this graph.")
+            raise KeyError("Source ID or Destination ID do not exist in this graph.")
 
     def get_vertex(self, airport_id: int) -> Optional[_AirportVertex]:
-        """Get a vertex from the graph"""
+        """Return a vertex object from its id"""
         return self._vertices.get(airport_id)
 
-    def get_neighbours(self, airport_id: int) -> set:
-        """Return a set of all neighbours ids of the given airport id"""
-
-        if airport_id not in self._vertices:
-            raise ValueError
-        else:
-            airport_index = self._edge_indices[airport_id]
-            neighbours = set()
-
-            for i, weight in enumerate(self._edges[airport_index]):
-                if weight != 0:
-                    for other_airport_id, other_index in self._edge_indices.items():
-                        if other_index == i:
-                            neighbours.add(other_airport_id)
-
-            return neighbours
-
-    def get_edges(self) -> list[list[int]]:
-        """Get all the edges in the graph. This will return a matrix of edge weights."""
-        return self._edges
-
-    def get_distance(self, airport_id1: int, airport_id2: int) -> int:
+    def get_earth_distance(self, airport_id1: int, airport_id2: int) -> int:
         """Return the rounded integer distance (in kilometers) between the given two airports"""
         airport1_coords = self._vertices[airport_id1].coordinates
         airport2_coords = self._vertices[airport_id2].coordinates
@@ -161,13 +158,6 @@ class AirportsGraph:
 
         return int(round(c * r, 0))
 
-    def is_adjacent(self, source_id: int, destination_id: int) -> bool:
-        """Check if two vertices are adjacent"""
-        src_id_index = self._edge_indices[source_id]
-        dest_id_index = self._edge_indices[destination_id]
-
-        return self._edges[src_id_index][dest_id_index] != 0
-
     def is_connected(self, source_id: int, destination_id: int, visited: set[int] = None) -> bool:
         """Check if two vertices are connected"""
         if visited is None:
@@ -178,7 +168,7 @@ class AirportsGraph:
 
         visited.add(source_id)
 
-        for neighbour in self.get_neighbours(source_id):
+        for neighbour in self.get_vertex(source_id).get_neighbours():
             if neighbour not in visited:
                 if self.is_connected(neighbour, destination_id, visited):
                     return True
@@ -203,21 +193,41 @@ class AirportsGraph:
         max_vertices specifies the maximum number of vertices that can appear in the graph.
         (This is necessary to limit the visualization output for large graphs.)
         """
+        # graph_nx = nx.Graph()
+        # for v in self._vertices.values():
+        #     graph_nx.add_node(
+        #         v.name, latitude=v.coordinates[0], longitude=v.coordinates[1])
+        #
+        #     for u in self.get_neighbours(v.id):
+        #         u_vertex = self._vertices[u]
+        #         if graph_nx.number_of_nodes() < max_vertices:
+        #             graph_nx.add_node(u_vertex.name, latitude=u_vertex.coordinates[0],
+        #                               longitude=u_vertex.coordinates[1])
+        #
+        #         if u_vertex.name in graph_nx.nodes:
+        #             ind1 = self._edge_indices[u_vertex.id]
+        #             ind2 = self._edge_indices[v.id]
+        #             distance = self._edges[ind1][ind2]
+        #             graph_nx.add_edge(v.name, u_vertex.name, weight=distance)
+        #
+        #     if graph_nx.number_of_nodes() >= max_vertices:
+        #         break
+        #
+        # return graph_nx
+
         graph_nx = nx.Graph()
         for v in self._vertices.values():
             graph_nx.add_node(
-                v.name, latitude=v.coordinates[0], longitude=v.coordinates[1])
+                v.name, latitude=v.coordinates[0], longitude=v.coordinates[1], id=v.id)
 
-            for u in self.get_neighbours(v.id):
+            for u in v.get_neighbours():
                 u_vertex = self._vertices[u]
                 if graph_nx.number_of_nodes() < max_vertices:
                     graph_nx.add_node(u_vertex.name, latitude=u_vertex.coordinates[0],
-                                      longitude=u_vertex.coordinates[1])
+                                      longitude=u_vertex.coordinates[1], id=u_vertex.id)
 
                 if u_vertex.name in graph_nx.nodes:
-                    ind1 = self._edge_indices[u_vertex.id]
-                    ind2 = self._edge_indices[v.id]
-                    distance = self._edges[ind1][ind2]
+                    distance = v.get_distance(u_vertex)
                     graph_nx.add_edge(v.name, u_vertex.name, weight=distance)
 
             if graph_nx.number_of_nodes() >= max_vertices:
@@ -225,19 +235,21 @@ class AirportsGraph:
 
         return graph_nx
 
-    def get_close_airports(self, airport_ids: list[int], max_distance: int) -> list[int]:
-        """Get a dictionary of airports within max_distance from the given airport ids"""
-        # List check
+    def get_close_airports(self, airport_ids: list[int], max_distance: int) -> set[int]:
+        """Return a set of airport ids within max_distance from the given airport ids"""
+        # Input check
         for airport_id in airport_ids:
             if airport_id not in self._vertices:
-                raise KeyError(
-                    f"Airport ID {airport_id} not found in the graph.")
+                raise KeyError(f"Airport ID {airport_id} not found in the graph.")
 
-        close_airports = [v for v in self.get_neighbours(
-            airport_ids[0]) if self.get_distance(airport_ids[0], v) <= max_distance]
+        close_airports = {neighbour for neighbour in self.get_vertex(airport_ids[0]).get_neighbours() if
+                          self.get_earth_distance(airport_ids[0], neighbour) <= max_distance}
+
         for airport_id in airport_ids[1:]:
-            close_airports = [v for v in close_airports if self.get_distance(
-                airport_id, v) <= max_distance]
+            close_airports = close_airports.intersection(
+                {neighbour for neighbour in self.get_vertex(airport_id).get_neighbours() if
+                 self.get_earth_distance(airport_id, neighbour) <= max_distance})
+
         return close_airports
 
 
@@ -291,11 +303,11 @@ if __name__ == "__main__":
 
     from visualizer import visualize_graph
 
-    # airports_data = "data/airports_small.dat"
-    # routes_data = "data/routes_small.dat"
+    airports_data = "data/airports_small.dat"
+    routes_data = "data/routes_small.dat"
 
-    airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
-    routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
+    # airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
+    # routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
 
     safety_data = "data/safest-countries-in-the-world-2025.csv"
 

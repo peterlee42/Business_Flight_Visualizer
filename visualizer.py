@@ -1,10 +1,9 @@
 """Visualizer for our graph"""
 import plotly.graph_objects as go
-
-import main
-import dash
-from dash import dcc, html, Output, Input, State
 import plotly.io as plo
+import dash
+from dash import dcc, html, Output, Input, ctx
+import main
 
 plo.renderers.default = 'browser'
 
