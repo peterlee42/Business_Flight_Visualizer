@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 
 import main
 import dash
-from dash import dcc, html, Output, Input, State
+from dash import dcc, html, Output, Input, ctx
 import plotly.io as plo
 
 plo.renderers.default = 'browser'
@@ -187,7 +187,7 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 5000) -> None
         Input('submit-button-state', 'n_clicks'),
         prevent_initial_call=True
     )
-    def display_click(clickdata: any, max_distance: any, button_state: any) -> (str, go.Figure):
+    def display_click(clickdata: any, max_distance: any, button_state: any) -> tuple[str, go.Figure]:
         """docstring"""
         if ctx.triggered_id == 'submit-button-state':
             if len(clicked_node) == 0:
