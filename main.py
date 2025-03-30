@@ -291,7 +291,7 @@ class AirportsGraph:
             country = airport.item.country
             if country not in countries:
                 countries[country] = []
-            countries[country].add(airport_id)
+            countries[country].append(airport_id)
 
         for country in countries:
             countries[country] = self.rank_airports_degrees(countries[country], max_out_size)
