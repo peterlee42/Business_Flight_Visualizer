@@ -8,7 +8,7 @@ import main
 plo.renderers.default = 'browser'
 
 
-def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 5000) -> None:
+def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000) -> None:
     """Visualize graph on map"""
     graph_nx = graph.to_networkx(max_vertices)
 
@@ -120,7 +120,8 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 5000) -> None
             ),
             html.Div(
                 [
-                    html.Label("Max Distance: ", style={'marginRight': '10px'}),
+                    html.Label("Max Distance: ", style={
+                               'marginRight': '10px'}),
                     dcc.Input(
                         id='my-input',
                         value='1000',
@@ -196,7 +197,8 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 5000) -> None
             result1 = ""
             for i in clicked_node:
                 id_list.append(i['points'][0]['id'])
-                result1 = main.AirportsGraph.get_close_airports(graph, id_list, int(max_distance))
+                result1 = main.AirportsGraph.get_close_airports(
+                    graph, id_list, int(max_distance))
             res = ', '.join(result1)
             change_node_back()
             clicked_nodes_name.clear()
@@ -228,17 +230,3 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 5000) -> None
         return "", fig
 
     app.run(debug=True)
-
-
-# if __name__ == "__main__":
-#     import doctest
-#
-#     doctest.testmod()
-#
-#     import python_ta
-#
-#     python_ta.check_all(config={
-#         'extra-imports': [],  # the names (strs) of imported modules
-#         'allowed-io': [],  # the names (strs) of functions that call print/open/input
-#         'max-line-length': 120
-#     })

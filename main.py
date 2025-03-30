@@ -86,10 +86,8 @@ class _AirportVertex:
     def add_adjacent(self, other: _AirportVertex, distance: float) -> None:
         """Add an adjacent airport and its distance to this vertex. Since the graph is not oriented, we also add the
         reverse edge."""
-        if self.id == other.id:
-            raise ValueError("Cannot add an airport to itself.")
-        elif other.id in self._adjacent or self.id in other._adjacent:
-            raise ValueError("Airport already exists in the adjacent list.")
+        if (self.id == other.id) or (other.id in self._adjacent or self.id in other._adjacent):
+            return
         else:
             self._adjacent[other.id] = distance
             other._adjacent[self.id] = distance
@@ -126,13 +124,15 @@ class AirportsGraph:
             destination_vertex = self.get_vertex(destination_id)
             # case if edge already made from other side to improve speed. we assume 0 means edge does not exist.
             if source_vertex.is_adjacent(destination_vertex):
-                raise ValueError("Edge already exists between these two airports.")
+                return
             else:
                 distance = self.get_earth_distance(source_id, destination_id)
 
-                source_vertex.add_adjacent(destination_vertex, distance)  # Will add the reverse edge as well
+                # Will add the reverse edge as well
+                source_vertex.add_adjacent(destination_vertex, distance)
         else:
-            raise KeyError("Source ID or Destination ID do not exist in this graph.")
+            raise KeyError(
+                "Source ID or Destination ID do not exist in this graph.")
 
     def get_vertex(self, airport_id: int) -> Optional[_AirportVertex]:
         """Return a vertex object from its id"""
@@ -187,11 +187,13 @@ class AirportsGraph:
         """Get the number of vertices in the graph"""
         return len(self._vertices)
 
-    def to_networkx(self, max_vertices: int = 100) -> nx.Graph:
+    def to_networkx(self, max_vertices: int = 7000) -> nx.Graph:
         """Convert this graph into a networkx Graph.
 
         max_vertices specifies the maximum number of vertices that can appear in the graph.
         (This is necessary to limit the visualization output for large graphs.)
+
+        This code has been inspired by the method built in exercise3/exercise4
         """
         # graph_nx = nx.Graph()
         # for v in self._vertices.values():
@@ -240,7 +242,8 @@ class AirportsGraph:
         # Input check
         for airport_id in airport_ids:
             if airport_id not in self._vertices:
-                raise KeyError(f"Airport ID {airport_id} not found in the graph.")
+                raise KeyError(
+                    f"Airport ID {airport_id} not found in the graph.")
 
         close_airports = {neighbour for neighbour in self.get_vertex(airport_ids[0]).get_neighbours() if
                           self.get_earth_distance(airport_ids[0], neighbour) <= max_distance}
@@ -303,11 +306,11 @@ if __name__ == "__main__":
 
     from visualizer import visualize_graph
 
-    airports_data = "data/airports_small.dat"
-    routes_data = "data/routes_small.dat"
+    # airports_data = "data/airports_small.dat"
+    # routes_data = "data/routes_small.dat"
 
-    # airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
-    # routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
+    airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
+    routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
 
     safety_data = "data/safest-countries-in-the-world-2025.csv"
 
@@ -316,7 +319,7 @@ if __name__ == "__main__":
 
     g = load_airports_graph(airports_df, routes_df)
 
-    visualize_graph(g)
+    visualize_graph(g, 50)
 
     # Testing
     # print(g.get_neighbours(1))
