@@ -253,7 +253,7 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 5000, output_
             id_list = []
             for i in clicked_node:
                 id_list.append(i['points'][0]['id'])
-                result1 = main.AirportsGraph.get_close_airports(graph, id_list, int(max_distance))
+                result1 = graph.get_close_airports(id_list, int(max_distance))
             res = ', '.join(result1)
             change_node_back()
             #change_color_back()
