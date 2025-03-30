@@ -10,8 +10,8 @@ import main
 plo.renderers.default = 'browser'
 
 
-def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000) -> None:
-    """Visualize graph on map"""
+def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> None:
+    """Interactive Graph Visualizer"""
     graph_nx = graph.to_networkx(max_vertices)
 
     node_traces = []
@@ -240,3 +240,60 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000) -> None
         return "", fig
 
     app.run(debug=True)
+
+
+def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):
+    """Visualize airports and connections on a map"""
+    graph_nx = graph.to_networkx(max_vertices)
+
+    latitudes = []
+    longitudes = []
+    node_names = []
+
+    for node in graph_nx.nodes:
+        lat = graph_nx.nodes[node]['latitude']
+        lon = graph_nx.nodes[node]['longitude']
+        latitudes.append(lat)
+        longitudes.append(lon)
+        node_names.append(node)
+
+    edge_lons = []
+    edge_lats = []
+    for edge in graph_nx.edges(data=True):
+        node1, node2 = edge[0], edge[1]
+        lat1, lon1 = graph_nx.nodes[node1]['latitude'], graph_nx.nodes[node1]['longitude']
+        lat2, lon2 = graph_nx.nodes[node2]['latitude'], graph_nx.nodes[node2]['longitude']
+        # None separates the line segments
+        edge_lats.extend([lat1, lat2, None])
+        edge_lons.extend([lon1, lon2, None])
+
+    fig = go.Figure(go.Scattermap(
+        mode="lines",
+        lon=edge_lons,
+        lat=edge_lats,
+        line={'color': '#76c893', 'width': 2},
+        name='Airport Connections',
+        opacity=0.2,
+    ))
+
+    fig.add_trace(go.Scattermap(
+        mode="markers",
+        lon=longitudes,
+        lat=latitudes,
+        text=node_names,
+        name='Airports',
+        marker={'size': 6, 'color': 'black'},
+        opacity=0.6
+    ))
+
+    fig.update_layout(
+        margin={'l': 0, 't': 0, 'b': 0, 'r': 0},
+        map={
+            'center': {'lon': 10, 'lat': 10},
+            'style': "open-street-map",
+            'center': {'lon': -20, 'lat': -20},
+            'zoom': 1,
+        },
+        title="Airports Network Visualization"
+    )
+    fig.show()
