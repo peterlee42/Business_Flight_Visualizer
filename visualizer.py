@@ -197,7 +197,7 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 5000) -> None
                 return 'please lick one airport'
 
             id_list = []
-            result1 = ""
+            result1 = []
             for i in clicked_node:
                 id_list.append(i['points'][0]['id'])
                 result1 = main.AirportsGraph.get_close_airports(graph, id_list, int(max_distance))

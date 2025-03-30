@@ -235,7 +235,7 @@ class AirportsGraph:
 
         return graph_nx
 
-    def get_close_airports(self, airport_ids: list[int], max_distance: int) -> set[int]:
+    def get_close_airports(self, airport_ids: list[int], max_distance: int) -> list[str]:
         """Return a set of airport ids within max_distance from the given airport ids"""
         # Input check
         for airport_id in airport_ids:
@@ -249,8 +249,10 @@ class AirportsGraph:
             close_airports = close_airports.intersection(
                 {neighbour for neighbour in self.get_vertex(airport_id).get_neighbours() if
                  self.get_earth_distance(airport_id, neighbour) <= max_distance})
-
-        return close_airports
+        result = []
+        for i in close_airports:
+            result.append(self._vertices[i].name)
+        return result
 
 
 # TODO: SAFETY INDEX
