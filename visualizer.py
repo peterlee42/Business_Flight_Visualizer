@@ -347,7 +347,7 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):
         degrees.append(vertex_degree)
 
         # Our scaling factor which is bounded above by size 20. Max size is 20, min size is 5.
-        degree_size.append(20 - (150 / (vertex_degree + 10)))
+        degree_size.append(26 - 2000/(vertex_degree+100))
 
     edge_lons = []
     edge_lats = []
@@ -384,7 +384,9 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):
             lon=longitudes,
             lat=latitudes,
             text=node_names,
+            customdata=degrees,
             name="Airports",
+            hovertemplate="Airport %{text}<br>(%{lat}°, %{lon}°)<br>Direct Connections: %{customdata}<extra></extra>",
             marker={"size": degree_size,
                     "color": degrees,
                     "colorscale": colour_scale,
@@ -401,6 +403,7 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):
 
     fig.update_layout(
         margin={"l": 0, "t": 30, "b": 0, "r": 0},
+        uirevision="constant",
         map={
             "center": {"lon": 10, "lat": 10},
             "style": "open-street-map",
