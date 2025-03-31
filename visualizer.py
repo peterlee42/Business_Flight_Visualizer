@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 
 import plotly.io as plo
 import dash
-from dash import dcc, html, Output, Input, ctx
+from dash import dcc, html, Output, Input, State, ctx
 
 import main
 
@@ -209,6 +209,15 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                             "margin": "20px 0",
                         },
                     ),
+                    html.Div(
+                        id="search-output",
+                        style={
+                            "textAlign": "center",
+                            "marginTop": "10px",
+                            "fontSize": "16px",
+                            "color": "green",
+                        },
+                    ),
                 ],
                 style={
                     "display": "flex",
@@ -222,19 +231,29 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
     # Map the node id to their names
     clicked_nodes = {}
 
+    # Function output
+    # This list will be edited in the function ONLY where it is supposed to be edited
+    # It is used to store the outputs of previous callbacks of the function and update the webpage
+    # without losing previous data
+    output = ["", "", fig]
+
     @app.callback(
         Output("output", "children"),
+        Output("search-output", "children"),
         Output("world-graph", "figure"),
         Input("world-graph", "clickData"),
         Input("my-input", "value"),
+        Input("search-input", "n_submit"),
+        State("search-input", "value"),
         Input("submit-button-state", "n_clicks"),
         prevent_initial_call=True,
     )
-    def display_click(clickdata: Any, max_distance: Any, button_state: Any) -> tuple[str, go.Figure]:
-        """display the change on webpage based on input"""
+    def display_click(clickdata: Any, max_distance: Any, _unused_n_submit: Any, search_input: Any, button_state: Any) -> tuple[str, str, go.Figure]:
+        """Display the change(s) on the webpage based on any input"""
         if ctx.triggered_id == 'submit-button-state':
             if len(clicked_nodes) == 0:
-                return "Please click one airport", fig
+                output[0] = "Please select an airport"
+                return tuple(output)
 
             id_list = list(clicked_nodes.keys())
 
@@ -254,18 +273,20 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                 if name not in clicked_nodes.values():
                     clicked_nodes[graph.get_airport_id_from_names([name])[0]] = name
                     change_node_marker(name, {"color": "green", "size": 10})
-            return f"The intersection airports include: {res}", fig
+            
+            output[0] = f"Closest airports: {res}"
+            return tuple(output)
 
         elif ctx.triggered_id == "world-graph":
             if not clickdata or "points" not in clickdata:
-                return "", fig
+                return tuple(output)
 
             point = clickdata["points"][0]
             node_name = point["text"]
             node_id = point["id"]
 
             if node_name not in graph_nx.nodes:
-                return "", fig
+                return tuple(output)
 
             if node_id in clicked_nodes:
                 # Unselect the node
@@ -277,14 +298,31 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                 change_node_marker(node_name, {"color": "blue", "size": 10})
 
             result = ", ".join(clicked_nodes.values())
-            return f"Selected node: {result}", fig
+            
+            output[0] = f"Selected node(s): {result}"
+            return tuple(output)
 
         elif ctx.triggered_id == "my-input":
             result = ", ".join(clicked_nodes.values())
-            return f"Selected node: {result}", fig
 
-        return "", fig
+            output[0] = f"Selected node(s): {result}"
+            return tuple(output)
+    
+        elif ctx.triggered_id == "search-input":
+            if search_input:
+                possibles = set()
+                for node in graph_nx.nodes:
+                    if search_input.lower() in node.lower():
+                        possibles.add(node)
+                if len(possibles) == 0:
+                    output[1] = "No airports found"
+                    return tuple(output)
+                else:
+                    result = ", ".join(possibles)
+                    output[1] = f"Possible airports: {result}"
+                    return tuple(output)
 
+        return tuple(output)
     app.run()
 
 
