@@ -1,7 +1,8 @@
 """Visualizer for our graph"""
 
-import plotly.graph_objects as go
 from typing import Any
+
+import plotly.graph_objects as go
 
 import plotly.io as plo
 import dash
@@ -251,7 +252,7 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
 
         return "", fig
 
-    app.run(debug=True)
+    app.run()
 
 
 def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):

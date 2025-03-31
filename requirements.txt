@@ -17,3 +17,4 @@ scipy
 
 # Data Handling
 pandas
+pycountry
