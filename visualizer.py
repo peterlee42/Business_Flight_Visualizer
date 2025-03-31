@@ -358,7 +358,7 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):
         degrees.append(vertex_degree)
 
         # Our scaling factor which is bounded above by size 20. Max size is 20, min size is 5.
-        degree_size.append(20 - (150 / (vertex_degree + 10)))
+        degree_size.append(26 - 2000/(vertex_degree+100))
 
     edge_lons = []
     edge_lats = []
