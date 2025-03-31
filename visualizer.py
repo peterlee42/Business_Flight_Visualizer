@@ -227,10 +227,11 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
         Output("world-graph", "figure"),
         Input("world-graph", "clickData"),
         Input("my-input", "value"),
+        Input("search-input", "value"),
         Input("submit-button-state", "n_clicks"),
         prevent_initial_call=True,
     )
-    def display_click(clickdata: Any, max_distance: Any, button_state: Any) -> tuple[str, go.Figure]:
+    def display_click(clickdata: Any, max_distance: Any, search_input: Any, button_state: Any) -> tuple[str, go.Figure]:
         """display the change on webpage based on input"""
         if ctx.triggered_id == 'submit-button-state':
             if len(clicked_nodes) == 0:
@@ -282,9 +283,20 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
         elif ctx.triggered_id == "my-input":
             result = ", ".join(clicked_nodes.values())
             return f"Selected node: {result}", fig
+    
+        elif ctx.triggered_id == "search-input":
+            if search_input:
+                possibles = set()
+                for node in graph_nx.nodes:
+                    if search_input.lower() in node.lower():
+                        possibles.add(node)
+                if len(possibles) == 0:
+                    return "No airport found", fig
+                else:
+                    result = ", ".join(possibles)
+                    return f"Possible airports: {result}", fig
 
         return "", fig
-
     app.run()
 
 
