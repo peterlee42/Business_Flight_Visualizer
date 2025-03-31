@@ -87,7 +87,6 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
 
     node_data_map = {}
     for i, data in enumerate(fig.data):
-        print(data)
         if data not in edge_traces and data not in text_traces and data.text:
             node_data_map[data.text[0]] = i
 
