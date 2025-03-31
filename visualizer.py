@@ -209,6 +209,15 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                             "margin": "20px 0",
                         },
                     ),
+                    html.Div(
+                        id="search-output",
+                        style={
+                            "textAlign": "center",
+                            "marginTop": "10px",
+                            "fontSize": "16px",
+                            "color": "green",
+                        },
+                    ),
                 ],
                 style={
                     "display": "flex",
@@ -224,6 +233,7 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
 
     @app.callback(
         Output("output", "children"),
+        Output("search-output", "children"),
         Output("world-graph", "figure"),
         Input("world-graph", "clickData"),
         Input("my-input", "value"),
@@ -235,7 +245,7 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
         """display the change on webpage based on input"""
         if ctx.triggered_id == 'submit-button-state':
             if len(clicked_nodes) == 0:
-                return "Please click one airport", fig
+                return "Please click one airport", "", fig
 
             id_list = list(clicked_nodes.keys())
 
@@ -255,18 +265,18 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                 if name not in clicked_nodes.values():
                     clicked_nodes[graph.get_airport_id_from_names([name])[0]] = name
                     change_node_marker(name, {"color": "green", "size": 10})
-            return f"The intersection airports include: {res}", fig
+            return f"The intersection airports include: {res}", "", fig
 
         elif ctx.triggered_id == "world-graph":
             if not clickdata or "points" not in clickdata:
-                return "", fig
+                return "", "", fig
 
             point = clickdata["points"][0]
             node_name = point["text"]
             node_id = point["id"]
 
             if node_name not in graph_nx.nodes:
-                return "", fig
+                return "", "", fig
 
             if node_id in clicked_nodes:
                 # Unselect the node
@@ -278,11 +288,11 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                 change_node_marker(node_name, {"color": "blue", "size": 10})
 
             result = ", ".join(clicked_nodes.values())
-            return f"Selected node: {result}", fig
+            return f"Selected node: {result}", "", fig
 
         elif ctx.triggered_id == "my-input":
             result = ", ".join(clicked_nodes.values())
-            return f"Selected node: {result}", fig
+            return f"Selected node: {result}", "", fig
     
         elif ctx.triggered_id == "search-input":
             if search_input:
@@ -291,12 +301,12 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                     if search_input.lower() in node.lower():
                         possibles.add(node)
                 if len(possibles) == 0:
-                    return "No airport found", fig
+                    return "", "No airport found", fig
                 else:
                     result = ", ".join(possibles)
-                    return f"Possible airports: {result}", fig
+                    return "", f"Possible airports: {result}", fig
 
-        return "", fig
+        return "", "", fig
     app.run()
 
 
