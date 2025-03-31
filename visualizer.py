@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 
 import plotly.io as plo
 import dash
-from dash import dcc, html, Output, Input, ctx
+from dash import dcc, html, Output, Input, State, ctx
 
 import main
 
@@ -243,11 +243,12 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
         Output("world-graph", "figure"),
         Input("world-graph", "clickData"),
         Input("my-input", "value"),
-        Input("search-input", "value"),
+        Input("search-input", "n_submit"),
+        State("search-input", "value"),
         Input("submit-button-state", "n_clicks"),
         prevent_initial_call=True,
     )
-    def display_click(clickdata: Any, max_distance: Any, search_input: Any, button_state: Any) -> tuple[str, str, go.Figure]:
+    def display_click(clickdata: Any, max_distance: Any, _unused_n_submit: Any, search_input: Any, button_state: Any) -> tuple[str, str, go.Figure]:
         """Display the change(s) on the webpage based on any input"""
         if ctx.triggered_id == 'submit-button-state':
             if len(clicked_nodes) == 0:
