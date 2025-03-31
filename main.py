@@ -360,15 +360,15 @@ if __name__ == "__main__":
     small_airports_data = "data/airports_small.dat"
     small_routes_data = "data/routes_small.dat"
 
-    airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
-    routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
+    airports_data = "data/airports.csv"
+    routes_data = "data/routes.csv"
 
     gpi_data = "data/Global Peace Index 2023.csv"
 
     # ----------Our Interactive visualizer app for small data----------
-    # small_airports_df, small_routes_df = load_data(small_airports_data, small_routes_data, gpi_data)
-    # small_airports_graph = load_airports_graph(small_airports_df, small_routes_df)
-    # visualize_graph_app(small_airports_graph)
+    small_airports_df, small_routes_df = load_data(small_airports_data, small_routes_data, gpi_data)
+    small_airports_graph = load_airports_graph(small_airports_df, small_routes_df)
+    visualize_graph_app(small_airports_graph)
 
     # ----------Our heatmap visualizer for big data----------
     airports_df, routes_df = load_data(airports_data, routes_data, gpi_data)

@@ -91,10 +91,7 @@ if __name__ == "__main__":
     #     'max-line-length': 120
     # })
 
-    # irports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
     airports_data = "data/airports_small.dat"
-
-    # routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
     routes_data = "data/routes_small.dat"
 
     gpi_data = "data/Global Peace Index 2023.csv"
