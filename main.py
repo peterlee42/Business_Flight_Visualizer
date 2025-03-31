@@ -171,9 +171,13 @@ class AirportsGraph:
         else:
             raise ValueError("No distance given between these two airports.")
 
-    def display_airport_names(self, airport_ids: list[int]) -> list[str]:
-        """Display the corresponding airport names given a list of airport ids"""
+    def get_airport_names_from_id(self, airport_ids: list[int]) -> list[str]:
+        """Return the corresponding airport names given a list of airport ids"""
         return [self._vertices[airport].item.name for airport in airport_ids]
+
+    def get_airport_id_from_names(self, airport_names: list[str]) -> list[int]:
+        """Return the corresponding airport ids given a list of airport names"""
+        return [airport_id for airport_id, airport in self._vertices.items() if airport.item.name in airport_names]
 
     def __contains__(self, airport_id: int) -> bool:
         """Check if an airport is in the graph"""
