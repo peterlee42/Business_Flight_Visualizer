@@ -22,13 +22,14 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
         lat1 = graph_nx.nodes[node]["latitude"]
         lon1 = graph_nx.nodes[node]["longitude"]
         id1 = graph_nx.nodes[node]["id"]
+        country1 = graph_nx.nodes[node]['country']
 
         node_trace = go.Scattermap(
             mode="markers",
             lon=[lon1],
             lat=[lat1],
             text=[node],
-            name="Airports",
+            name=country1,
             marker={"size": 4, "color": "black"},
             ids=[id1],
         )
