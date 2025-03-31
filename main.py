@@ -311,6 +311,11 @@ class AirportsGraph:
 
         return ranked_airports[:max_out_size]
 
+    def find_connected_within_dist(self) -> set{_AirportVertex}:
+        """Given a airport id, find all connected airports that have a route or sequence of routes that are within
+        max_distance far from the airport."""
+
+
 
 def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
     """Given two pandas DataFrame objects airports and routes, build and return an airport graph using the data

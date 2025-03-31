@@ -129,7 +129,7 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                         style={
                             "textAlign": "center",
                             "color": "#0d1b2a",
-                            #"marginTop": "20px",
+                            # "marginTop": "20px",
                         },
                     ),
                     html.Div(
@@ -151,7 +151,7 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                             "display": "flex",
                             "alignItems": "center",
                             "justifyContent": "center",
-                            #"margin": "20px 0",
+                            # "margin": "20px 0",
                         },
                     ),
                     html.Button(
@@ -246,8 +246,8 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
 
             res = ", ".join(rank_airport_names)
             # Reset clicked nodes
-            for id in clicked_nodes:
-                change_node_marker(clicked_nodes[id], {"color": "black", "size": 4})
+            for node_id in clicked_nodes:
+                change_node_marker(clicked_nodes[node_id], {"color": "black", "size": 4})
             clicked_nodes.clear()
             # Highlight the output nodes
             for name in rank_airport_names:
