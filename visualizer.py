@@ -341,6 +341,7 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):
     longitudes = []
     node_names = []
     degrees = []
+    degree_size = []
 
     for node in graph_nx.nodes:
         lat = graph_nx.nodes[node]["latitude"]
@@ -351,7 +352,13 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):
         latitudes.append(lat)
         longitudes.append(lon)
         node_names.append(f"Name: {node} | Country: {country} | Global Piece Index: {global_piece_index}")
-        degrees.append(graph_nx.degree(node))
+
+        vertex_degree = graph_nx.degree(node)
+
+        degrees.append(vertex_degree)
+
+        # Our scaling factor which is bounded above by size 20. Max size is 20, min size is 5.
+        degree_size.append(20 - (150 / (vertex_degree + 10)))
 
     edge_lons = []
     edge_lats = []
@@ -381,8 +388,6 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):
     )
 
     colour_scale = [[0, "blue"], [1, "red"]]
-
-    degree_size = [22 - (1/(0.0005 * (degree+100))) for degree in degrees]
 
     fig.add_trace(
         go.Scattermap(
