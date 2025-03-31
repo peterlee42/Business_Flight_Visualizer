@@ -132,7 +132,6 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                         style={
                             "textAlign": "center",
                             "color": "#0d1b2a",
-                            # "marginTop": "20px",
                         },
                     ),
                     html.Div(
@@ -154,7 +153,6 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                             "display": "flex",
                             "alignItems": "center",
                             "justifyContent": "center",
-                            # "margin": "20px 0",
                         },
                     ),
                     html.Button(
@@ -171,15 +169,6 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                             "cursor": "pointer",
                         },
                     ),
-                    # html.Div(
-                    #     "Output: ",
-                    #     style={
-                    #         "textAlign": "center",
-                    #         "marginBottom": "10px",
-                    #         "color": "#333",
-                    #         "fontWeight": "bold",
-                    #     },
-                    # ),
                     html.Div(
                         id="output",
                         style={
@@ -261,7 +250,7 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
 
             id_list = list(clicked_nodes.keys())
 
-            close_airport_ids = main.AirportsGraph.get_close_airports_connected(
+            close_airport_ids = main.AirportsGraph.get_close_airports_adjacent(
                 graph, id_list, int(max_distance)
             )
             rank_airport_ids = main.AirportsGraph.rank_airports(graph, close_airport_ids, 5)
@@ -317,9 +306,9 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
         elif ctx.triggered_id == "search-input":
             if search_input:
                 possibles = set()
-                for node in graph_nx.nodes:
-                    if search_input.lower() in node.lower():
-                        possibles.add(node)
+                for curr_node in graph_nx.nodes:
+                    if search_input.lower() in curr_node.lower():
+                        possibles.add(curr_node)
                 if len(possibles) == 0:
                     output[1] = "No airports found"
                     return output[0], output[1], output[2]

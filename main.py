@@ -305,8 +305,8 @@ class AirportsGraph:
             countries[country].append(airport_id)
 
         for country in countries:
-            countries[country] = sorted(airport_ids, key=lambda x: self._vertices[x].get_degree(), reverse=True)[
-                                 :max_out_size]
+            countries[country] = sorted(airport_ids, key=lambda given_id: self._vertices[given_id].get_degree(),
+                                        reverse=True)[:max_out_size]
 
         # Rank the countries by their Global Peace Index and merge the lists together
         ranked_airports = []
@@ -352,17 +352,17 @@ def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
 
 
 if __name__ == "__main__":
-    # import doctest
-    #
-    # doctest.testmod()
-    #
-    # import python_ta
-    #
-    # python_ta.check_all(config={
-    #     'extra-imports': ["pandas", "networkx", "visualizer", "math", "airports_data"],
-    #     'allowed-io': [],  # the names (strs) of functions that call print/open/input
-    #     'max-line-length': 120
-    # })
+    import doctest
+
+    doctest.testmod()
+
+    import python_ta
+
+    python_ta.check_all(config={
+        'extra-imports': ["pandas", "networkx", "visualizer", "math", "airports_data"],
+        'allowed-io': [],  # the names (strs) of functions that call print/open/input
+        'max-line-length': 120
+    })
 
     from visualizer import visualize_graph, visualize_graph_app
 
