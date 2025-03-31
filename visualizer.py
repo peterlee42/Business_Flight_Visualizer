@@ -22,13 +22,14 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
         lat1 = graph_nx.nodes[node]["latitude"]
         lon1 = graph_nx.nodes[node]["longitude"]
         id1 = graph_nx.nodes[node]["id"]
+        country1 = graph_nx.nodes[node]['country']
 
         node_trace = go.Scattermap(
             mode="markers",
             lon=[lon1],
             lat=[lat1],
             text=[node],
-            name="Airports",
+            name=country1,
             marker={"size": 4, "color": "black"},
             ids=[id1],
         )
@@ -67,6 +68,7 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
             lat=[mid_lat],
             text=[str(edge[2]["weight"]) + "km"],
             textposition="middle center",
+            hoverinfo="none",
             showlegend=False,
             textfont={"size": 8},
         )
@@ -285,6 +287,8 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
 
             point = clickdata["points"][0]
             node_name = point["text"]
+            if not point.get("id"):
+                return (output[0], output[1], output[2])
             node_id = point["id"]
 
             if node_name not in graph_nx.nodes:
