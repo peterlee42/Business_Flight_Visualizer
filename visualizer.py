@@ -414,6 +414,7 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):
 
     fig.update_layout(
         margin={"l": 0, "t": 30, "b": 0, "r": 0},
+        uirevision="constant",
         map={
             "center": {"lon": 10, "lat": 10},
             "style": "open-street-map",
