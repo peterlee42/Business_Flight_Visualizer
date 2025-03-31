@@ -284,6 +284,8 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
 
             point = clickdata["points"][0]
             node_name = point["text"]
+            if not point.get("id"):
+                return (output[0], output[1], output[2])
             node_id = point["id"]
 
             if node_name not in graph_nx.nodes:
