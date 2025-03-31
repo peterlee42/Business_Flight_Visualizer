@@ -10,6 +10,7 @@ import networkx as nx
 import pandas as pd
 
 from airports_data import load_data
+import heapq
 
 
 @dataclass
@@ -237,6 +238,26 @@ class AirportsGraph:
         return {neighbour.id for neighbour in curr_airport_vertex.neighbours if
                 curr_airport_vertex.neighbours[neighbour] <= max_distance}
 
+    def dfs_for_distance(self, airport_id: int, max_distance: int,
+                         airports_in_dist: set[int]) -> None:
+        """Use Depth First Search Algorithm to find all aiports within a distance."""
+        if max_distance < 0 or airport_id in airports_in_dist:
+            return
+        else:
+            airports_in_dist.add(airport_id)
+            for neighbour, edge_weight in self._vertices[airport_id].neighbours.items():
+                self.dfs_for_distance(neighbour.id, max_distance - edge_weight, airports_in_dist)
+
+    def get_connected_within_dist(self, airport_id: int, max_distance: int) -> set[int]:
+        """Get any connected vertex from the airport corresponding to airport_id where there exists a path that is
+        less than or equal to max_distance distance."""
+        if airport_id not in self._vertices:
+            return set()
+        else:
+            airports_in_dist = set()
+            self.dfs_for_distance(airport_id, max_distance, airports_in_dist)
+            return airports_in_dist
+
     def get_close_airports(self, airport_ids: list[int], max_distance: int) -> set:
         """Return a set of airport ids that are adjacent to every airport in airport_ids within max_distance.
 
@@ -311,11 +332,6 @@ class AirportsGraph:
 
         return ranked_airports[:max_out_size]
 
-    def find_connected_within_dist(self) -> set{_AirportVertex}:
-        """Given a airport id, find all connected airports that have a route or sequence of routes that are within
-        max_distance far from the airport."""
-
-
 
 def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
     """Given two pandas DataFrame objects airports and routes, build and return an airport graph using the data
@@ -375,11 +391,11 @@ if __name__ == "__main__":
     gpi_data = "data/Global Peace Index 2023.csv"
 
     # ----------Our Interactive visualizer app for small data----------
-    small_airports_df, small_routes_df = load_data(small_airports_data, small_routes_data, gpi_data)
-    small_airports_graph = load_airports_graph(small_airports_df, small_routes_df)
-    visualize_graph_app(small_airports_graph)
+    # small_airports_df, small_routes_df = load_data(small_airports_data, small_routes_data, gpi_data)
+    # small_airports_graph = load_airports_graph(small_airports_df, small_routes_df)
+    # visualize_graph_app(small_airports_graph)
 
     # ----------Our heatmap visualizer for big data----------
     airports_df, routes_df = load_data(airports_data, routes_data, gpi_data)
     airports_graph_full = load_airports_graph(airports_df, routes_df)
-    visualize_graph(airports_graph_full)
+    # visualize_graph(airports_graph_full)
