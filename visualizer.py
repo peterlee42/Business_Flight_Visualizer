@@ -1,15 +1,15 @@
 """Visualizer for our graph"""
 
-import plotly.graph_objects as go
+import os
+import webbrowser
+from threading import Timer
 from typing import Any
+
+import plotly.graph_objects as go
 
 import plotly.io as plo
 import dash
 from dash import dcc, html, Output, Input, ctx
-
-import os
-import webbrowser
-from threading import Timer
 
 import main
 
