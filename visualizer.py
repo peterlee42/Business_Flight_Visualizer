@@ -249,12 +249,13 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
         Input("submit-button-state", "n_clicks"),
         prevent_initial_call=True,
     )
-    def display_click(clickdata: Any, max_distance: Any, _unused_n_submit: Any, search_input: Any, _unused_button_state: Any) -> tuple[str, str, go.Figure]:
+    def display_click(clickdata: Any, max_distance: Any, _unused_n_submit: Any, search_input: Any,
+                      _unused_button_state: Any) -> tuple[str, str, go.Figure]:
         """Display the change(s) on the webpage based on any input"""
         if ctx.triggered_id == 'submit-button-state':
             if len(clicked_nodes) == 0:
                 output[0] = "Please select an airport"
-                return tuple(output)
+                return output[0], output[1], output[2]
 
             id_list = list(clicked_nodes.keys())
 
@@ -274,13 +275,13 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                 if name not in clicked_nodes.values():
                     clicked_nodes[graph.get_airport_id_from_names([name])[0]] = name
                     change_node_marker(name, {"color": "green", "size": 10})
-            
+
             output[0] = f"Closest airports: {res}"
-            return tuple(output)
+            return output[0], output[1], output[2]
 
         elif ctx.triggered_id == "world-graph":
             if not clickdata or "points" not in clickdata:
-                return tuple(output)
+                return output[0], output[1], output[2]
 
             point = clickdata["points"][0]
             node_name = point["text"]
@@ -289,7 +290,7 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
             node_id = point["id"]
 
             if node_name not in graph_nx.nodes:
-                return tuple(output)
+                return output[0], output[1], output[2]
 
             if node_id in clicked_nodes:
                 # Unselect the node
@@ -301,16 +302,16 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                 change_node_marker(node_name, {"color": "blue", "size": 10})
 
             result = ", ".join(clicked_nodes.values())
-            
+
             output[0] = f"Selected node(s): {result}"
-            return tuple(output)
+            return output[0], output[1], output[2]
 
         elif ctx.triggered_id == "my-input":
             result = ", ".join(clicked_nodes.values())
 
             output[0] = f"Selected node(s): {result}"
-            return tuple(output)
-    
+            return output[0], output[1], output[2]
+
         elif ctx.triggered_id == "search-input":
             if search_input:
                 possibles = set()
@@ -319,13 +320,14 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                         possibles.add(node)
                 if len(possibles) == 0:
                     output[1] = "No airports found"
-                    return tuple(output)
+                    return output[0], output[1], output[2]
                 else:
                     result = ", ".join(possibles)
                     output[1] = f"Possible airports: {result}"
-                    return tuple(output)
+                    return output[0], output[1], output[2]
 
-        return tuple(output)
+        return output[0], output[1], output[2]
+
     app.run()
 
 
