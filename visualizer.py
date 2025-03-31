@@ -67,6 +67,7 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
             lat=[mid_lat],
             text=[str(edge[2]["weight"]) + "km"],
             textposition="middle center",
+            hoverinfo="none",
             showlegend=False,
             textfont={"size": 8},
         )
