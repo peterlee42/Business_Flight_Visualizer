@@ -72,7 +72,7 @@ def load_data(airports_data_path: str, routes_data_path: str, gpi_path: str) -> 
     airports_df = airports_df[airports_df["Airport ID"].isin(valid_airports)]
 
     # ----------APPEND THE GPI INDEX FOR EACH AIRPORT----------
-    airports_df = airports_df.merge(gpi_df[["Country", "Overall Scores"]], on="Country", how="left")
+    airports_df = airports_df.merge(gpi_df[["ISO2", "Overall Scores"]], on="ISO2", how="left")
     airports_df.rename(columns={"Overall Scores": "Global Peace Index"}, inplace=True)
 
     return airports_df, routes_df
@@ -91,11 +91,11 @@ if __name__ == "__main__":
     #     'max-line-length': 120
     # })
 
-    airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
-    # airports_data = "data/airports_small.dat"
+    # irports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
+    airports_data = "data/airports_small.dat"
 
-    routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
-    # routes_data = "data/routes_small.dat"
+    # routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
+    routes_data = "data/routes_small.dat"
 
     gpi_data = "data/Global Peace Index 2023.csv"
 

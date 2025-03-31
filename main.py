@@ -203,6 +203,8 @@ class AirportsGraph:
                 latitude=v.item.coordinates[0],
                 longitude=v.item.coordinates[1],
                 id=v.id,
+                global_piece_index=v.global_peace_index,
+                country=v.item.country
             )
 
             for u in v.neighbours:
@@ -212,6 +214,8 @@ class AirportsGraph:
                         latitude=u.item.coordinates[0],
                         longitude=u.item.coordinates[1],
                         id=u.id,
+                        global_piece_index=u.global_peace_index,
+                        country=u.item.country
                     )
 
                 if u.item.name in graph_nx.nodes:
@@ -252,7 +256,7 @@ class AirportsGraph:
         return close_airports
 
     def rank_airports_degrees(self, airport_ids: list[int], max_out_size: int = 5) -> list[int]:
-        """Rank the airports by their degree
+        """Rank the airports by their degree in descending order
 
         Preconditions:
             - all({airport_id in self._vertices for airport_id in airport_ids})
@@ -322,7 +326,7 @@ def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
     for row in df1.itertuples(index=False):
         airport_id = row[0]  # This corresponds to 'Airport ID'
         airport_item = Airport(row[1], row[2], row[3], (row[4], row[5]), row[6])
-        airport_gpi = row[7]
+        airport_gpi = row[8]
         airports_graph.add_vertex(airport_id, airport_item, airport_gpi)
 
     # Create edges for routes using itertuples
@@ -361,10 +365,10 @@ if __name__ == "__main__":
 
     gpi_data = "data/Global Peace Index 2023.csv"
 
-    # ----------Our visualizer app for small data----------
-    small_airports_df, small_routes_df = load_data(small_airports_data, small_routes_data, gpi_data)
-    small_airports_graph = load_airports_graph(small_airports_df, small_routes_df)
-    visualize_graph_app(small_airports_graph)
+    # ----------Our Interactive visualizer app for small data----------
+    # small_airports_df, small_routes_df = load_data(small_airports_data, small_routes_data, gpi_data)
+    # small_airports_graph = load_airports_graph(small_airports_df, small_routes_df)
+    # visualize_graph_app(small_airports_graph)
 
     # ----------Our heatmap visualizer for big data----------
     airports_df, routes_df = load_data(airports_data, routes_data, gpi_data)
