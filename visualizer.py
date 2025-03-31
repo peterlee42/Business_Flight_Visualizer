@@ -86,6 +86,7 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
 
     node_data_map = {}
     for i, data in enumerate(fig.data):
+        print(data)
         if data not in edge_traces and data not in text_traces and data.text:
             node_data_map[data.text[0]] = i
 
@@ -248,7 +249,7 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
         Input("submit-button-state", "n_clicks"),
         prevent_initial_call=True,
     )
-    def display_click(clickdata: Any, max_distance: Any, _unused_n_submit: Any, search_input: Any, button_state: Any) -> tuple[str, str, go.Figure]:
+    def display_click(clickdata: Any, max_distance: Any, _unused_n_submit: Any, search_input: Any, _unused_button_state: Any) -> tuple[str, str, go.Figure]:
         """Display the change(s) on the webpage based on any input"""
         if ctx.triggered_id == 'submit-button-state':
             if len(clicked_nodes) == 0:
