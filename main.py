@@ -10,7 +10,6 @@ import networkx as nx
 import pandas as pd
 
 from airports_data import load_data
-import heapq
 
 
 @dataclass
@@ -232,7 +231,7 @@ class AirportsGraph:
 
         return graph_nx
 
-    def get_neighour_within_dist(self, airport_id: int, max_distance: int) -> set:
+    def get_neighbour_within_dist(self, airport_id: int, max_distance: int) -> set:
         """Get adjacent neighbours that are within max_distance"""
         curr_airport_vertex = self._vertices[airport_id]
         return {neighbour.id for neighbour in curr_airport_vertex.neighbours if
@@ -258,52 +257,36 @@ class AirportsGraph:
             self.dfs_for_distance(airport_id, max_distance, airports_in_dist)
             return airports_in_dist
 
-    def get_close_airports(self, airport_ids: list[int], max_distance: int) -> set:
+    def get_close_airports_adjacent(self, airport_ids: list[int], max_distance: int) -> set:
         """Return a set of airport ids that are adjacent to every airport in airport_ids within max_distance.
 
         Preconditions:
             - all({airport_id in self._vertices for airport_id in airport_ids})
         """
-        # Compute the neighbours that are at most max_distance far first.
-        curr_airport_vertex = self._vertices[airport_ids[0]]
-
-        # Set comprehension to find all id of neighbours that are at most max_distance far
-        close_airports = {neighbour.id for neighbour in curr_airport_vertex.neighbours if
-                          curr_airport_vertex.neighbours[neighbour] <= max_distance}
+        # Compute the neighbours that are at most max_distance far for the first id.
+        close_airports = self.get_neighbour_within_dist(airport_ids[0], max_distance)
 
         # Then we can find the intersection of all airports that are at most max_distance away from all airports.
         for airport_id in airport_ids[1:]:
-            curr_airport_vertex = self._vertices[airport_id]
-            close_airports = close_airports.intersection(
-                {neighbour.id for neighbour in curr_airport_vertex.neighbours if
-                 curr_airport_vertex.neighbours[neighbour] <= max_distance})
+            close_airports = close_airports.intersection(self.get_neighbour_within_dist(airport_id, max_distance))
 
         return close_airports
 
-    def rank_airports_degrees(self, airport_ids: list[int], max_out_size: int = 5) -> list[int]:
-        """Rank the airports by their degree in descending order
+    def get_close_airports_connected(self, airport_ids: list[int], max_distance: int) -> set:
+        """Return a set of airport ids that are connected to every airport in airport_ids. Each of these airports must
+         have a route/path within max_distance far.
 
         Preconditions:
             - all({airport_id in self._vertices for airport_id in airport_ids})
         """
-        # Rank the airports by their degree (number of connections)
-        # and return the top max_out_size airports
-        ranked_airports = sorted(airport_ids, key=lambda x: self._vertices[x].get_degree(), reverse=True)
+        # Compute the neighbours that are at most max_distance far for the first id.
+        close_airports = self.get_connected_within_dist(airport_ids[0], max_distance)
 
-        return ranked_airports[:max_out_size]
+        # Then we can find the intersection of all airports that are at most max_distance away from all airports.
+        for airport_id in airport_ids[1:]:
+            close_airports = close_airports.intersection(self.get_connected_within_dist(airport_id, max_distance))
 
-    def rank_airports_gpi(self, airport_ids: set[int], max_out_size: int = 5) -> list[int]:
-        """Rank the airports by their global peace index
-
-        Preconditions:
-            - all({airport_id in self._vertices for airport_id in airport_ids})
-        """
-        assert all({curr_id in self._vertices for curr_id in airport_ids})
-
-        # Rank the airports by their global peace index
-        ranked_airports = sorted(airport_ids, key=lambda x: self._vertices[x].global_peace_index, reverse=True)
-
-        return ranked_airports[:max_out_size]
+        return close_airports
 
     def rank_airports(self, airport_ids: set[int], max_out_size: int) -> list[int]:
         """Rank the airports by their global peace index and number of connections.
@@ -322,7 +305,8 @@ class AirportsGraph:
             countries[country].append(airport_id)
 
         for country in countries:
-            countries[country] = self.rank_airports_degrees(countries[country], max_out_size)
+            countries[country] = sorted(airport_ids, key=lambda x: self._vertices[x].get_degree(), reverse=True)[
+                                 :max_out_size]
 
         # Rank the countries by their Global Peace Index and merge the lists together
         ranked_airports = []

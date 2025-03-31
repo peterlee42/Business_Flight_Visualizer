@@ -259,7 +259,7 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
 
             id_list = list(clicked_nodes.keys())
 
-            close_airport_ids = main.AirportsGraph.get_close_airports(
+            close_airport_ids = main.AirportsGraph.get_close_airports_connected(
                 graph, id_list, int(max_distance)
             )
             rank_airport_ids = main.AirportsGraph.rank_airports(graph, close_airport_ids, 5)
