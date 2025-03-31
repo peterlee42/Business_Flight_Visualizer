@@ -90,24 +90,17 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
         title="Airports Network Visualization",
     )
 
-    def change_node_color(node_name: str) -> go.Figure:
-        """highlight the vertex chosen"""
-        for i, value in enumerate(fig.data):
-            if value in edge_traces or value in text_traces:
-                pass
-            else:
-                if node_name == fig.data[i].text[0]:
-                    fig.data[i].marker = {"size": 10, "color": "black"}
-                    return fig
-        return fig
+    node_data_map = {}
+    for i, data in enumerate(fig.data):
+        if data not in edge_traces and data not in text_traces and data.text:
+            node_data_map[data.text[0]] = i
 
-    def change_node_back() -> go.Figure:
-        """change all the vertex back to original state"""
-        for i, value in enumerate(fig.data):
-            if value in edge_traces or value in text_traces:
-                pass
-            else:
-                fig.data[i].marker = {"size": 4, "color": "black"}
+    def change_node_marker(node_name: str, marker_data: dict[str, Any]) -> go.Figure:
+        """Highlight the chosen vertex"""
+        index = node_data_map.get(node_name)
+        if index is not None:
+            fig.data[index].marker = marker_data
+            return fig
         return fig
 
     # Dash App
@@ -137,6 +130,14 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                             "max-width": "1000px",
                         },
                     ),
+                    html.H3(
+                        "Search for Nearby Adjacent Airports",
+                        style={
+                            "textAlign": "center",
+                            "color": "#0d1b2a",
+                            #"marginTop": "20px",
+                        },
+                    ),
                     html.Div(
                         [
                             html.Label("Max Distance: ", style={"marginRight": "10px"}),
@@ -156,16 +157,7 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                             "display": "flex",
                             "alignItems": "center",
                             "justifyContent": "center",
-                            "margin": "20px 0",
-                        },
-                    ),
-                    html.Div(
-                        "Output: ",
-                        style={
-                            "textAlign": "center",
-                            "marginBottom": "10px",
-                            "color": "#333",
-                            "fontWeight": "bold",
+                            #"margin": "20px 0",
                         },
                     ),
                     html.Button(
@@ -173,7 +165,7 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                         children="Submit",
                         style={
                             "display": "block",
-                            "margin": "0 auto",
+                            "margin": "10px auto",
                             "padding": "10px 20px",
                             "backgroundColor": "#007BFF",
                             "color": "#fff",
@@ -182,6 +174,15 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                             "cursor": "pointer",
                         },
                     ),
+                    # html.Div(
+                    #     "Output: ",
+                    #     style={
+                    #         "textAlign": "center",
+                    #         "marginBottom": "10px",
+                    #         "color": "#333",
+                    #         "fontWeight": "bold",
+                    #     },
+                    # ),
                     html.Div(
                         id="output",
                         style={
@@ -189,6 +190,29 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
                             "marginTop": "10px",
                             "fontSize": "16px",
                             "color": "green",
+                        },
+                    ),
+                    html.Div(
+                        [
+                            html.Label("Search airport: ", style={"marginRight": "10px"}),
+                            dcc.Input(
+                                id="search-input",
+                                value="",
+                                placeholder="Enter airport name",
+                                type="text",
+                                style={
+                                    "width": "150px",
+                                    "padding": "5px",
+                                    "border": "1px solid #ccc",
+                                    "borderRadius": "3px",
+                                },
+                            ),
+                        ],
+                        style={
+                            "display": "flex",
+                            "alignItems": "center",
+                            "justifyContent": "center",
+                            "margin": "20px 0",
                         },
                     ),
                 ],
@@ -201,8 +225,8 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
         ],
     )
 
-    clicked_nodes_name = []
-    clicked_node = []
+    # Map the node id to their names
+    clicked_nodes = {}
 
     @app.callback(
         Output("output", "children"),
@@ -215,23 +239,27 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
     def display_click(clickdata: Any, max_distance: Any, button_state: Any) -> tuple[str, go.Figure]:
         """display the change on webpage based on input"""
         if ctx.triggered_id == 'submit-button-state':
-            if len(clicked_node) == 0:
-                return "please click one airport", fig
+            if len(clicked_nodes) == 0:
+                return "Please click one airport", fig
 
-            id_list = []
-            for i in clicked_node:
-                id_list.append(i["points"][0]["id"])
+            id_list = list(clicked_nodes.keys())
 
             close_airport_ids = main.AirportsGraph.get_close_airports(
                 graph, id_list, int(max_distance)
             )
             rank_airport_ids = main.AirportsGraph.rank_airports(graph, close_airport_ids, 5)
-            rank_airport_names = graph.display_airport_names(rank_airport_ids)
+            rank_airport_names = graph.get_airport_names_from_id(rank_airport_ids)
 
             res = ", ".join(rank_airport_names)
-            change_node_back()
-            clicked_nodes_name.clear()
-            clicked_node.clear()
+            # Reset clicked nodes
+            for id in clicked_nodes:
+                change_node_marker(clicked_nodes[id], {"color": "black", "size": 4})
+            clicked_nodes.clear()
+            # Highlight the output nodes
+            for name in rank_airport_names:
+                if name not in clicked_nodes.values():
+                    clicked_nodes[graph.get_airport_id_from_names([name])[0]] = name
+                    change_node_marker(name, {"color": "green", "size": 10})
             return f"The intersection airports include: {res}", fig
 
         elif ctx.triggered_id == "world-graph":
@@ -240,20 +268,25 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
 
             point = clickdata["points"][0]
             node_name = point["text"]
+            node_id = point["id"]
 
             if node_name not in graph_nx.nodes:
                 return "", fig
 
-            # Add clicked node to list
-            clicked_nodes_name.append(node_name)
-            clicked_node.append(clickdata)
-            change_node_color(node_name)
-            result = ", ".join(clicked_nodes_name)
+            if node_id in clicked_nodes:
+                # Unselect the node
+                del clicked_nodes[node_id]
+                change_node_marker(node_name, {"color": "black", "size": 4})
+            else:
+                # Add clicked node to list
+                clicked_nodes[node_id] = node_name
+                change_node_marker(node_name, {"color": "blue", "size": 10})
 
+            result = ", ".join(clicked_nodes.values())
             return f"Selected node: {result}", fig
 
         elif ctx.triggered_id == "my-input":
-            result = ", ".join(clicked_nodes_name)
+            result = ", ".join(clicked_nodes.values())
             return f"Selected node: {result}", fig
 
         return "", fig
