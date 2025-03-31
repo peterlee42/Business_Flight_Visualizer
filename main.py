@@ -9,8 +9,6 @@ from typing import Any, Union
 import networkx as nx
 import pandas as pd
 
-import os 
-
 from airports_data import load_data
 
 
@@ -23,12 +21,10 @@ class Airport:
         - city: The city of the location
         - country: The country for the location
         - coordinates: The coordinates of an airport on map using longitude and latitude
-        - altitude: The altitude of an airport
         - timezone: The timezone for the location
 
     Representation Invariants:
         - self.name != ''
-        - self.altitude > 0
         - self.coordinates != tuple()
         - self.city != ''
         - self.country != ''
@@ -39,7 +35,6 @@ class Airport:
     city: str
     country: str
     coordinates: tuple[float, float]
-    altitude: int
     timezone: str
 
 
@@ -47,27 +42,28 @@ class _AirportVertex:
     """Airport Vertex Class
 
     Instance Attributes:
-    - id: The given OpenFlights id of an airport
-    - item: The characteristics of the airport vertex
-    - safety_index: The safety index of the country that the airport is in. We consider this as the "vertex weight."
-    - neighbours: The airport vertices that are adjacent to this vertex, and their corresponding edge weights.
+        - id: The given OpenFlights id of an airport
+        - item: The characteristics of the airport vertex
+        - global_peace_index: The global peace index of the country that the airport is in. We consider this as the
+            "vertex weight."
+        - neighbours: The airport vertices that are adjacent to this vertex, and their corresponding edge weights.
 
     Representation Invariants:
-    - self.id >= 0
-    - self.safety_index >= 0
-    - self not in self.neighbours
-    - all(self in u.neighbours for u in self.neighbours)
+        - self.id >= 0
+        - self.global_peace_index >= 0
+        - self not in self.neighbours
+        - all(self in u.neighbours for u in self.neighbours)
     """
 
     id: int
     item: Airport
-    safety_index: float
+    global_peace_index: float
     neighbours: dict[_AirportVertex, Union[int, float]]
 
-    def __init__(self, airport_id: int, item: Airport, safety_index: float) -> None:
+    def __init__(self, airport_id: int, item: Airport, global_peace_index: float) -> None:
         self.id = airport_id
         self.item = item
-        self.safety_index = safety_index
+        self.global_peace_index = global_peace_index
         self.neighbours = {}
 
     def get_degree(self) -> int:
@@ -88,10 +84,10 @@ class AirportsGraph:
     def __init__(self) -> None:
         self._vertices = {}
 
-    def add_vertex(self, airport_id: int, item: Airport, safety_index: float) -> None:
+    def add_vertex(self, airport_id: int, item: Airport, global_peace_index: float) -> None:
         """Add an airport to the graph, mapping the airport id to the vertex object"""
         if airport_id not in self._vertices:
-            self._vertices[airport_id] = _AirportVertex(airport_id, item, safety_index)
+            self._vertices[airport_id] = _AirportVertex(airport_id, item, global_peace_index)
 
     def add_edge(self, source_id: int, destination_id: int) -> None:
         """Add an adjacent airport and its distance to this vertex. Since the graph is not oriented, we also add the
@@ -106,10 +102,7 @@ class AirportsGraph:
             destination_vertex = self._vertices[destination_id]
 
             # case if edge already exists, we don't need to recalculate distance to improve runtime.
-            if (
-                    source_vertex in destination_vertex.neighbours
-                    or destination_vertex in source_vertex.neighbours
-            ):
+            if source_vertex in destination_vertex.neighbours or destination_vertex in source_vertex.neighbours:
                 return
             else:
                 distance = self.get_earth_distance(source_id, destination_id)
@@ -214,6 +207,8 @@ class AirportsGraph:
                 latitude=v.item.coordinates[0],
                 longitude=v.item.coordinates[1],
                 id=v.id,
+                global_piece_index=v.global_peace_index,
+                country=v.item.country
             )
 
             for u in v.neighbours:
@@ -223,6 +218,8 @@ class AirportsGraph:
                         latitude=u.item.coordinates[0],
                         longitude=u.item.coordinates[1],
                         id=u.id,
+                        global_piece_index=u.global_peace_index,
+                        country=u.item.country
                     )
 
                 if u.item.name in graph_nx.nodes:
@@ -263,7 +260,7 @@ class AirportsGraph:
         return close_airports
 
     def rank_airports_degrees(self, airport_ids: list[int], max_out_size: int = 5) -> list[int]:
-        """Rank the airports by their degree
+        """Rank the airports by their degree in descending order
 
         Preconditions:
             - all({airport_id in self._vertices for airport_id in airport_ids})
@@ -274,23 +271,23 @@ class AirportsGraph:
 
         return ranked_airports[:max_out_size]
 
-    def rank_airports_safety(self, airport_ids: set[int], max_out_size: int = 5) -> list[int]:
-        """Rank the airports by their safety index
+    def rank_airports_gpi(self, airport_ids: set[int], max_out_size: int = 5) -> list[int]:
+        """Rank the airports by their global peace index
 
         Preconditions:
             - all({airport_id in self._vertices for airport_id in airport_ids})
         """
         assert all({curr_id in self._vertices for curr_id in airport_ids})
 
-        # Rank the airports by their safety index
-        ranked_airports = sorted(airport_ids, key=lambda x: self._vertices[x].safety_index, reverse=True)
+        # Rank the airports by their global peace index
+        ranked_airports = sorted(airport_ids, key=lambda x: self._vertices[x].global_peace_index, reverse=True)
 
         return ranked_airports[:max_out_size]
 
     def rank_airports(self, airport_ids: set[int], max_out_size: int) -> list[int]:
-        """Rank the airports by their safety index and number of connections.
+        """Rank the airports by their global peace index and number of connections.
         Group each airport by the ones in the same country and keep the ones with the highest connections.
-        Then, rank each country by their safety index, and finally rank by combining the two.
+        Then, rank each country by their global peace index, and finally rank by combining the two.
 
         Preconditions:
             - all({airport_id in self._vertices for airport_id in airport_ids})
@@ -306,9 +303,10 @@ class AirportsGraph:
         for country in countries:
             countries[country] = self.rank_airports_degrees(countries[country], max_out_size)
 
-        # Rank the countries by their safety index and merge the lists together
+        # Rank the countries by their Global Peace Index and merge the lists together
         ranked_airports = []
-        for country in sorted(countries, key=lambda x: self._vertices[countries[x][0]].safety_index, reverse=True):
+        for country in sorted(countries,
+                              key=lambda given_id: self._vertices[countries[given_id][0]].global_peace_index):
             ranked_airports += countries[country]
 
         return ranked_airports[:max_out_size]
@@ -331,15 +329,15 @@ def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
     # Create vertices using itertuples instead of to_dict
     for row in df1.itertuples(index=False):
         airport_id = row[0]  # This corresponds to 'Airport ID'
-        current_item = Airport(row[1], row[2], row[3], (row[4], row[5]), row[6], row[7])
-        current_safety_index = row[8]
-        airports_graph.add_vertex(airport_id, current_item, current_safety_index)
+        airport_item = Airport(row[1], row[2], row[3], (row[4], row[5]), row[6])
+        airport_gpi = row[8]
+        airports_graph.add_vertex(airport_id, airport_item, airport_gpi)
 
     # Create edges for routes using itertuples
     for row in df2.itertuples(index=False):
-        source_airport_id = row[3]  # This corresponds to 'Source airport ID'
+        source_airport_id = row[1]  # This corresponds to 'Source airport ID'
         # This corresponds to 'Destination airport ID'
-        destination_airport_id = row[5]
+        destination_airport_id = row[3]
 
         # Ensure both airports exist in the airports dataframe
         if source_airport_id in airports_graph and destination_airport_id in airports_graph:
@@ -350,14 +348,13 @@ def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
 
 if __name__ == "__main__":
     # import doctest
-
+    #
     # doctest.testmod()
-
+    #
     # import python_ta
-
+    #
     # python_ta.check_all(config={
     #     'extra-imports': ["pandas", "networkx", "visualizer", "math", "airports_data"],
-    #     # the names (strs) of imported modules
     #     'allowed-io': [],  # the names (strs) of functions that call print/open/input
     #     'max-line-length': 120
     # })
@@ -370,17 +367,14 @@ if __name__ == "__main__":
     airports_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/airports.dat"
     routes_data = "https://raw.githubusercontent.com/jpatokal/openflights/master/data/routes.dat"
 
-    safety_data = "data/safest-countries-in-the-world-2025.csv"
+    gpi_data = "data/Global Peace Index 2023.csv"
+
+    # ----------Our Interactive visualizer app for small data----------
+    # small_airports_df, small_routes_df = load_data(small_airports_data, small_routes_data, gpi_data)
+    # small_airports_graph = load_airports_graph(small_airports_df, small_routes_df)
+    # visualize_graph_app(small_airports_graph)
 
     # ----------Our heatmap visualizer for big data----------
-    airports_df, routes_df = load_data(airports_data, routes_data, safety_data)
+    airports_df, routes_df = load_data(airports_data, routes_data, gpi_data)
     airports_graph_full = load_airports_graph(airports_df, routes_df)
-    if os.environ.get("WERKZEUG_RUN_MAIN") == "true": #prevent reloading
-        visualize_graph(airports_graph_full)
-
-    # ----------Our visualizer app for small data----------
-    small_airports_df, small_routes_df = load_data(small_airports_data, small_routes_data, safety_data)
-    small_airports_graph = load_airports_graph(small_airports_df, small_routes_df)
-    visualize_graph_app(small_airports_graph)
-
-    
+    visualize_graph(airports_graph_full)

@@ -1,8 +1,5 @@
 """Visualizer for our graph"""
 
-import os
-import webbrowser
-from threading import Timer
 from typing import Any
 
 import plotly.graph_objects as go
@@ -15,9 +12,6 @@ import main
 
 plo.renderers.default = "browser"
 
-def open_browser():
-    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-        webbrowser.open_new("http://127.0.0.1:8050/")
 
 def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> None:
     """Interactive Graph Visualizer"""
@@ -291,8 +285,7 @@ def visualize_graph_app(graph: main.AirportsGraph, max_vertices: int = 100) -> N
 
         return "", fig
 
-    Timer(1, open_browser).start()
-    app.run(debug=True)
+    app.run()
 
 
 def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):
@@ -307,9 +300,12 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):
     for node in graph_nx.nodes:
         lat = graph_nx.nodes[node]["latitude"]
         lon = graph_nx.nodes[node]["longitude"]
+        global_piece_index = graph_nx.nodes[node]["global_piece_index"]
+        country = graph_nx.nodes[node]["country"]
+
         latitudes.append(lat)
         longitudes.append(lon)
-        node_names.append(node)
+        node_names.append(f"Name: {node} | Country: {country} | Global Piece Index: {global_piece_index}")
         degrees.append(graph_nx.degree(node))
 
     edge_lons = []
