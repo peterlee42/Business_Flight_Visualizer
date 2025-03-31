@@ -382,6 +382,8 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):
 
     colour_scale = [[0, "blue"], [1, "red"]]
 
+    degree_size = [22 - (1/(0.0005 * (degree+100))) for degree in degrees]
+
     fig.add_trace(
         go.Scattermap(
             mode="markers",
@@ -389,7 +391,7 @@ def visualize_graph(graph: main.AirportsGraph, max_vertices: int = 7000):
             lat=latitudes,
             text=node_names,
             name="Airports",
-            marker={"size": 6,
+            marker={"size": degree_size,
                     "color": degrees,
                     "colorscale": colour_scale,
                     "colorbar": {

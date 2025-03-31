@@ -377,7 +377,7 @@ if __name__ == "__main__":
     # ----------Our heatmap visualizer for big data----------
     airports_df, routes_df = load_data(airports_data, routes_data, gpi_data)
     airports_graph_full = load_airports_graph(airports_df, routes_df)
-    # visualize_graph(airports_graph_full)
+    visualize_graph(airports_graph_full)
 
     # ----------Our Interactive visualizer app for small data----------
     small_airports_df, small_routes_df = load_data(small_airports_data, small_routes_data, gpi_data)
