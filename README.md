@@ -1,2 +1,1 @@
-# csc111p2
-CSC111 Project 2
+# Business Flight Visualizer
