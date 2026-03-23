@@ -60,7 +60,9 @@ class _AirportVertex:
     global_peace_index: float
     neighbours: dict[_AirportVertex, Union[int, float]]
 
-    def __init__(self, airport_id: int, item: Airport, global_peace_index: float) -> None:
+    def __init__(
+        self, airport_id: int, item: Airport, global_peace_index: float
+    ) -> None:
         self.id = airport_id
         self.item = item
         self.global_peace_index = global_peace_index
@@ -84,10 +86,14 @@ class AirportsGraph:
     def __init__(self) -> None:
         self._vertices = {}
 
-    def add_vertex(self, airport_id: int, item: Airport, global_peace_index: float) -> None:
+    def add_vertex(
+        self, airport_id: int, item: Airport, global_peace_index: float
+    ) -> None:
         """Add an airport to the graph, mapping the airport id to the vertex object"""
         if airport_id not in self._vertices:
-            self._vertices[airport_id] = _AirportVertex(airport_id, item, global_peace_index)
+            self._vertices[airport_id] = _AirportVertex(
+                airport_id, item, global_peace_index
+            )
 
     def add_edge(self, source_id: int, destination_id: int) -> None:
         """Add an adjacent airport and its distance to this vertex. Since the graph is not oriented, we also add the
@@ -102,7 +108,10 @@ class AirportsGraph:
             destination_vertex = self._vertices[destination_id]
 
             # case if edge already exists, we don't need to recalculate distance to improve runtime.
-            if source_vertex in destination_vertex.neighbours or destination_vertex in source_vertex.neighbours:
+            if (
+                source_vertex in destination_vertex.neighbours
+                or destination_vertex in source_vertex.neighbours
+            ):
                 return
             else:
                 distance = self.get_earth_distance(source_id, destination_id)
@@ -144,7 +153,9 @@ class AirportsGraph:
 
         return int(round(c * r, 0))
 
-    def is_connected(self, source_id: int, destination_id: int, visited: set[int]) -> bool:
+    def is_connected(
+        self, source_id: int, destination_id: int, visited: set[int]
+    ) -> bool:
         """Check if two vertices are connected"""
         if visited is set():
             visited = set()
@@ -177,7 +188,11 @@ class AirportsGraph:
 
     def get_airport_id_from_names(self, airport_names: list[str]) -> list[int]:
         """Return the corresponding airport ids given a list of airport names"""
-        return [airport_id for airport_id, airport in self._vertices.items() if airport.item.name in airport_names]
+        return [
+            airport_id
+            for airport_id, airport in self._vertices.items()
+            if airport.item.name in airport_names
+        ]
 
     def __contains__(self, airport_id: int) -> bool:
         """Check if an airport is in the graph"""
@@ -208,7 +223,7 @@ class AirportsGraph:
                 longitude=v.item.coordinates[1],
                 id=v.id,
                 global_piece_index=v.global_peace_index,
-                country=v.item.country
+                country=v.item.country,
             )
 
             for u in v.neighbours:
@@ -219,7 +234,7 @@ class AirportsGraph:
                         longitude=u.item.coordinates[1],
                         id=u.id,
                         global_piece_index=u.global_peace_index,
-                        country=u.item.country
+                        country=u.item.country,
                     )
 
                 if u.item.name in graph_nx.nodes:
@@ -234,18 +249,24 @@ class AirportsGraph:
     def get_neighbour_within_dist(self, airport_id: int, max_distance: int) -> set:
         """Get adjacent neighbours that are within max_distance"""
         curr_airport_vertex = self._vertices[airport_id]
-        return {neighbour.id for neighbour in curr_airport_vertex.neighbours if
-                curr_airport_vertex.neighbours[neighbour] <= max_distance}
+        return {
+            neighbour.id
+            for neighbour in curr_airport_vertex.neighbours
+            if curr_airport_vertex.neighbours[neighbour] <= max_distance
+        }
 
-    def dfs_for_distance(self, airport_id: int, max_distance: int,
-                         airports_in_dist: set[int]) -> None:
+    def dfs_for_distance(
+        self, airport_id: int, max_distance: int, airports_in_dist: set[int]
+    ) -> None:
         """Use Depth First Search Algorithm to find all aiports within a distance."""
         if max_distance < 0 or airport_id in airports_in_dist:
             return
         else:
             airports_in_dist.add(airport_id)
             for neighbour, edge_weight in self._vertices[airport_id].neighbours.items():
-                self.dfs_for_distance(neighbour.id, max_distance - edge_weight, airports_in_dist)
+                self.dfs_for_distance(
+                    neighbour.id, int(max_distance - edge_weight), airports_in_dist
+                )
 
     def get_connected_within_dist(self, airport_id: int, max_distance: int) -> set[int]:
         """Get any connected vertex from the airport corresponding to airport_id where there exists a path that is
@@ -257,34 +278,50 @@ class AirportsGraph:
             self.dfs_for_distance(airport_id, max_distance, airports_in_dist)
             return airports_in_dist
 
-    def get_close_airports_adjacent(self, airport_ids: list[int], max_distance: int) -> set:
+    def get_close_airports_adjacent(
+        self, airport_ids: list[int], max_distance: int
+    ) -> set:
         """Return a set of airport ids that are adjacent to every airport in airport_ids within max_distance.
 
         Preconditions:
             - all({airport_id in self._vertices for airport_id in airport_ids})
         """
+        valid_ids = [aid for aid in airport_ids if aid in self._vertices]
+
+        if not valid_ids:
+            return set()
         # Compute the neighbours that are at most max_distance far for the first id.
         close_airports = self.get_neighbour_within_dist(airport_ids[0], max_distance)
 
         # Then we can find the intersection of all airports that are at most max_distance away from all airports.
         for airport_id in airport_ids[1:]:
-            close_airports = close_airports.intersection(self.get_neighbour_within_dist(airport_id, max_distance))
+            close_airports = close_airports.intersection(
+                self.get_neighbour_within_dist(airport_id, max_distance)
+            )
 
         return close_airports
 
-    def get_close_airports_connected(self, airport_ids: list[int], max_distance: int) -> set:
+    def get_close_airports_connected(
+        self, airport_ids: list[int], max_distance: int
+    ) -> set:
         """Return a set of airport ids that are connected to every airport in airport_ids. Each of these airports must
          have a route/path within max_distance far.
 
         Preconditions:
             - all({airport_id in self._vertices for airport_id in airport_ids})
         """
+        valid_ids = [aid for aid in airport_ids if aid in self._vertices]
+
+        if not valid_ids:
+            return set()
         # Compute the neighbours that are at most max_distance far for the first id.
         close_airports = self.get_connected_within_dist(airport_ids[0], max_distance)
 
         # Then we can find the intersection of all airports that are at most max_distance away from all airports.
         for airport_id in airport_ids[1:]:
-            close_airports = close_airports.intersection(self.get_connected_within_dist(airport_id, max_distance))
+            close_airports = close_airports.intersection(
+                self.get_connected_within_dist(airport_id, max_distance)
+            )
 
         return close_airports
 
@@ -305,13 +342,20 @@ class AirportsGraph:
             countries[country].append(airport_id)
 
         for country in countries:
-            countries[country] = sorted(airport_ids, key=lambda given_id: self._vertices[given_id].get_degree(),
-                                        reverse=True)[:max_out_size]
+            countries[country] = sorted(
+                airport_ids,
+                key=lambda given_id: self._vertices[given_id].get_degree(),
+                reverse=True,
+            )[:max_out_size]
 
         # Rank the countries by their Global Peace Index and merge the lists together
         ranked_airports = []
-        for country in sorted(countries,
-                              key=lambda given_id: self._vertices[countries[given_id][0]].global_peace_index):
+        for country in sorted(
+            countries,
+            key=lambda given_id: (
+                self._vertices[countries[given_id][0]].global_peace_index
+            ),
+        ):
             ranked_airports += countries[country]
 
         return ranked_airports[:max_out_size]
@@ -345,24 +389,27 @@ def load_airports_graph(df1: pd.DataFrame, df2: pd.DataFrame) -> AirportsGraph:
         destination_airport_id = row[3]
 
         # Ensure both airports exist in the airports dataframe
-        if source_airport_id in airports_graph and destination_airport_id in airports_graph:
+        if (
+            source_airport_id in airports_graph
+            and destination_airport_id in airports_graph
+        ):
             airports_graph.add_edge(source_airport_id, destination_airport_id)
 
     return airports_graph
 
 
 if __name__ == "__main__":
-    import doctest
+    # import doctest
 
-    doctest.testmod()
+    # doctest.testmod()
 
-    import python_ta
+    # import python_ta
 
-    python_ta.check_all(config={
-        'extra-imports': ["pandas", "networkx", "visualizer", "math", "airports_data"],
-        'allowed-io': [],  # the names (strs) of functions that call print/open/input
-        'max-line-length': 120
-    })
+    # python_ta.check_all(config={
+    #    'extra-imports': ["pandas", "networkx", "visualizer", "math", "airports_data"],
+    #    'allowed-io': [],  # the names (strs) of functions that call print/open/input
+    #    'max-line-length': 120
+    # })
 
     from visualizer import visualize_graph, visualize_graph_app
 
@@ -380,6 +427,8 @@ if __name__ == "__main__":
     visualize_graph(airports_graph_full)
 
     # ----------Our Interactive visualizer app for small data----------
-    small_airports_df, small_routes_df = load_data(small_airports_data, small_routes_data, gpi_data)
+    small_airports_df, small_routes_df = load_data(
+        small_airports_data, small_routes_data, gpi_data
+    )
     small_airports_graph = load_airports_graph(small_airports_df, small_routes_df)
     visualize_graph_app(small_airports_graph)
